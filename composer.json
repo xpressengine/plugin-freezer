@@ -1,0 +1,36 @@
+{
+  "name": "xpressengine-plugin/freezer",
+  "description": "This Package is Xpressengine Plugin - 휴먼계정 관리.",
+  "keywords": [
+    "xpressengine",
+    "plugin",
+    "user"
+  ],
+  "license": "LGPL-2.1",
+  "version": "1.0.0",
+  "type": "xpressengine-plugin",
+  "support": {
+    "email": "developers@xpressengine.com"
+  },
+  "authors": [
+    {
+      "name": "XE Developers",
+      "email": "developers@xpressengine.com",
+      "homepage": "http://xpressengine.io",
+      "role": "Developer"
+    }
+  ],
+  "extra": {
+    "xpressengine": {
+      "title": "휴먼계정 관리",
+      "component": {}
+    }
+  },
+  "require": {
+  },
+  "autoload": {
+    "psr-4": {
+      "Xpressengine\\Plugins\\Freezer\\": "src/"
+    }
+  }
+}
