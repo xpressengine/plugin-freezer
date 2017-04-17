@@ -15,7 +15,8 @@ namespace Xpressengine\Plugins\Freezer\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-    /**
+
+/**
      * @category
      * @package     Xpressengine\Plugins\Store
      * @author      XE Team (khongchi) <khongchi@xpressengine.com>
@@ -34,5 +35,10 @@ class Log extends Model
     protected $casts = [
         'content' => 'array'
     ];
+
+    public function user()
+    {
+        $this->belongsTo(User::class, 'userId');
+    }
 
 }

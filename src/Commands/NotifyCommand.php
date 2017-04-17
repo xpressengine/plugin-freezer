@@ -44,6 +44,26 @@ class NotifyCommand extends Command
      */
     public function handle()
     {
-        $this->handler->notify();
+        $type = $this->handler->config('freeze_type', 'freeze');
+        $users = $this->handler->choose('notify');
+
+        $count = $users->count();
+
+        if($count === 0) {
+            $this->warn('No users to be notified about freezing.');
+            return;
+        }
+
+        if ($this->input->isInteractive() && $this->confirm(
+            // x 명의 회원에게 이메일을 보내려 합니다. 실행하시겠습니까?
+                "Emails will be sent to $count users. Do you want to execute it?"
+            ) === false
+        ) {
+            $this->warn('Process is canceled by you.');
+            return null;
+        }
+        $count = $this->handler->notify($users);
+
+        $this->warn("Emails was sent to $count users.".PHP_EOL);
     }
 }

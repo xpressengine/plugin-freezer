@@ -15,9 +15,12 @@ namespace Xpressengine\Plugins\Freezer;
 
 use Carbon\Carbon;
 use DB;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Xpressengine\Plugins\Freezer\Jobs\FreezeJob;
+use Xpressengine\Plugins\Freezer\Jobs\NotifyJob;
 use Xpressengine\Plugins\Freezer\Models\Log;
+use Xpressengine\Plugins\Freezer\Models\User;
 use Xpressengine\User\UserHandler;
 
 /**
@@ -61,23 +64,67 @@ class Handler
 
     public function choose($action = 'freeze')
     {
+        $users = new Collection();
         if($action === 'freeze') {
             $duration = $this->config('timer');
             $eventDate = Carbon::now()->subDays($duration);
             $users = $this->handler->where('loginAt', '<', $eventDate)->get();
-        }
+        } elseif($action === 'notify') {
+            $duration = $this->config('notify_timer');
+            $eventDate = Carbon::now()->subDays($duration);
+            $candidates = User::where('loginAt', '<', $eventDate)->with(['freeze_logs' => function ($q) {
+                return $q->orderBy('createdAt', 'desc');
+            }])->get();
 
+            foreach ($candidates as $user) {
+                $latestLog = $user->freeze_logs->first();
+                if(data_get($latestLog, 'action') !== 'notify') {
+                    $users->add($user);
+                }
+            }
+        }
         return $users;
     }
 
-    public function notify()
+    /**
+     * 휴면처리 대상이 되는 회원에게 예고 이메일 전송하는 잡을 생성하여 Queue에 추가한다.
+     *
+     * @param null $users
+     *
+     * @return int
+     */
+    public function notify($users = null)
     {
+        $freezeType = $this->config('freeze_type', 'freeze');
+        $size = $this->config('queue_size', 1);
+
+        if($users === null) {
+            $users = $this->choose('notify');
+        }
+
+        $user_ids = [];
+        foreach ($users as $user) {
+            $user_ids[] = $user->id;
+
+            if(count($user_ids) === $size) {
+                $this->dispatch(new NotifyJob($user_ids, $freezeType));
+                $user_ids = [];
+            }
+        }
+        if(count($user_ids)) {
+            $this->dispatch(new NotifyJob($user_ids, $freezeType));
+        }
+
+        return $users->count();
+
     }
 
     /**
      * 휴면처리 대상이 되는 모든 회원을 조회후 휴면처리 잡(FreezeJob)을 생성하여 Queue에 추가한다.
      *
      * @param $users
+     *
+     * @return int
      */
     public function freeze($users = null)
     {
@@ -123,6 +170,58 @@ class Handler
         }
     }
 
+    public function deleteUser($user_ids)
+    {
+        if(is_string($user_ids)) {
+            $user_ids = [$user_ids];
+        }
+
+        $users = $this->handler->findMany($user_ids);
+
+        foreach ($users as $user) {
+            try {
+                $this->handler->leave($user->id);
+                $this->sendEmail($user, 'delete');
+            } catch (\Exception $e) {
+                $this->logging($user->id, 'delete', ['message'=>$e->getMessage()], 'failed');
+                throw $e;
+            }
+            $this->logging($user->id, 'delete');
+        }
+    }
+
+    public function notifyUser($user_ids)
+    {
+        if(is_string($user_ids)) {
+            $user_ids = [$user_ids];
+        }
+
+        $users = $this->handler->findMany($user_ids);
+
+        foreach ($users as $user) {
+            try {
+                $this->sendEmail($user, 'notify');
+            } catch (\Exception $e) {
+                $this->logging($user->id, 'notify', ['message'=>$e->getMessage()], 'failed');
+                throw $e;
+            }
+            $this->logging($user->id, 'notify');
+        }
+    }
+
+    public function unfreeze($user_id)
+    {
+        try {
+            $this->moveData('recovery', $user_id);
+            $user = $this->handler->find($user_id);
+            $this->sendEmail($user, 'unfreeze');
+        } catch (\Exception $e) {
+            $this->logging($user_id, 'unfreeze', ['message'=>$e->getMessage()], 'failed');
+            throw $e;
+        }
+        $this->logging($user->id, 'unfreeze');
+    }
+
     protected function moveData($type, $user_id)
     {
         if($type === 'freeze') {
@@ -162,48 +261,13 @@ class Handler
         }
     }
 
-    public function deleteUser($user_ids)
-    {
-        if(is_string($user_ids)) {
-            $user_ids = [$user_ids];
-        }
-
-        $users = $this->handler->findMany($user_ids);
-
-        foreach ($users as $user) {
-            try {
-                $this->handler->leave($user->id);
-                $this->sendEmail($user, 'delete');
-            } catch (\Exception $e) {
-                $this->logging($user->id, 'delete', ['message'=>$e->getMessage()], 'failed');
-                throw $e;
-            }
-            $this->logging($user->id, 'delete', 'successed');
-        }
-    }
-
-    public function unfreeze($user_id)
-    {
-
-        try {
-            $this->moveData('recovery', $user_id);
-            $user = $this->handler->find($user_id);
-            $this->sendEmail($user, 'unfreeze');
-        } catch (\Exception $e) {
-            $this->logging($user->id, 'unfreeze', ['message'=>$e->getMessage()], 'failed');
-            throw $e;
-        }
-        $this->logging($user->id, 'unfreeze', 'successed');
-
-    }
-
     protected function logging($user_id, $action, $content = [], $result = 'successd')
     {
         // type = freeze, delete, unfreeze, notify
         $log = new Log();
         $log->userId = $user_id;
         $log->action = $action;
-        $log->result = $action;
+        $log->result = $result;
         $log->content = $content;
         $log->save();
     }
