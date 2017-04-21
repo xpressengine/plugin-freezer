@@ -64,6 +64,6 @@ class NotifyCommand extends Command
         }
         $count = $this->handler->notify($users);
 
-        $this->warn("Emails was sent to $count users.".PHP_EOL);
+        $this->warn("Emails were sent to $count users.".PHP_EOL);
     }
 }

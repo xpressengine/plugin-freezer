@@ -65,6 +65,6 @@ class FreezeCommand extends Command
         }
         $count = $this->handler->freeze($users);
 
-        $this->warn("$count users was $typeTitle.".PHP_EOL);
+        $this->warn("$count users ware $typeTitle.".PHP_EOL);
     }
 }
