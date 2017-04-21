@@ -1,6 +1,6 @@
 {
   "name": "xpressengine-plugin/freezer",
-  "description": "This Package is Xpressengine Plugin - 휴먼계정 관리.",
+  "description": "This Package is Xpressengine Plugin - 휴면계정 관리.",
   "keywords": [
     "xpressengine",
     "plugin",
@@ -22,7 +22,7 @@
   ],
   "extra": {
     "xpressengine": {
-      "title": "휴먼계정 관리",
+      "title": "휴면계정 관리",
       "component": {}
     }
   },
