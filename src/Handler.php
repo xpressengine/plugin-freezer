@@ -97,6 +97,7 @@ class Handler
     {
         $freezeType = $this->config('freeze_type', 'freeze');
         $size = $this->config('queue_size', 1);
+        $queue = $this->config('queue.notify', 'sync');
 
         if($users === null) {
             $users = $this->choose('notify');
@@ -107,7 +108,7 @@ class Handler
             $user_ids[] = $user->id;
 
             if(count($user_ids) === $size) {
-                $this->dispatch(new NotifyJob($user_ids, $freezeType));
+                $this->dispatch((new NotifyJob($user_ids, $freezeType))->onQueue($queue));
                 $user_ids = [];
             }
         }
@@ -130,6 +131,7 @@ class Handler
     {
         $freezeType = $this->config('freeze_type', 'freeze');
         $size = $this->config('queue_size', 1);
+        $queue = $this->config('queue.freeze', 'sync');
 
         if($users === null) {
             $users = $this->choose('freeze');
@@ -145,7 +147,7 @@ class Handler
             }
         }
         if(count($user_ids)) {
-            $this->dispatch(new FreezeJob($user_ids, $freezeType));
+            $this->dispatch((new FreezeJob($user_ids, $freezeType))->onQueue($queue));
         }
         return $users->count();
     }
