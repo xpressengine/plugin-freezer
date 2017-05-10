@@ -324,13 +324,13 @@ class Handler
                     return $emailInfo->userId;
                 }
             }
-        } elseif (array_has($credentials, 'displayName')) { // 이름 변경
+        } elseif (array_has($credentials, 'displayName')) { // 이름 검사
             $name = array_get($credentials, 'displayName');
             $userInfo = DB::table('freezer_user')->where('displayName', $name)->first();
             if ($userInfo !== null) {
                 return $userInfo->id;
             }
-        } elseif(array_has($credentials, 'address')) { // 이메일 추가
+        } elseif(array_has($credentials, 'address')) { // 이메일 검사
             $address = array_get($credentials, 'address');
             $emailInfo = DB::table('freezer_user_email')->where('address', $address)->first();
             if($emailInfo !== null) {

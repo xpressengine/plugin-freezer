@@ -11,6 +11,7 @@ use Xpressengine\Plugins\Freezer\Commands\NotifyCommand;
 use Xpressengine\Plugins\Freezer\Commands\UnfreezeCommand;
 use Xpressengine\Plugins\Freezer\Middlewares\Middleware;
 use Xpressengine\User\Exceptions\DisplayNameAlreadyExistsException;
+use Xpressengine\User\Exceptions\EmailAlreadyExistsException;
 use Xpressengine\User\UserInterface;
 
 class Plugin extends AbstractPlugin
@@ -60,6 +61,7 @@ class Plugin extends AbstractPlugin
                     return $target($credentials, $remember, $login);
                 }
             }
+            return $result;
         });
 
         // social_login - login 시도시
@@ -112,6 +114,22 @@ class Plugin extends AbstractPlugin
             }
         );
 
+        // email, 휴면상태인 계정에 존재하는지 검사
+        intercept(
+            'XeUser@validateEmail',
+            'freezer::validateEmail',
+            function ($target, $email) {
+                $result = $target($email);
+                if($result === true) {
+                    $frozenId = app('freezer::handler')->attempt(['address' => $email]);
+                    if($frozenId !== null) {
+                        throw new EmailAlreadyExistsException();
+                    }
+                }
+                return $result;
+            }
+        );
+
         // email - add 시도시
         intercept(
             'XeUser@createEmail',
@@ -123,14 +141,10 @@ class Plugin extends AbstractPlugin
                 if($frozenId !== null) {
                     throw new HttpException('400','이미 다른 회원에 의해 등록된 이메일입니다.');
                 }
-
                 $result = $target($user, $data, $confirmed);
-
+                return $result;
             }
         );
-
-
-
 
     }
 
