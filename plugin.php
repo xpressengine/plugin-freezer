@@ -33,6 +33,13 @@ class Plugin extends AbstractPlugin
         $this->registerEvents();
 
         $this->route();
+
+        $schedule = app('Illuminate\Console\Scheduling\Schedule');
+        $at = array_get($this->config(), 'scheduled_at');
+        if ($at) {
+            $schedule->command('freezer:freeze')->dailyAt($at)->appendOutputTo('storage/logs/freezer.log');
+            $schedule->command('freezer:notify')->dailyAt($at)->appendOutputTo('storage/logs/freezer.log');
+        }
     }
 
     protected function registerEvents()

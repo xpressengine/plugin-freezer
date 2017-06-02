@@ -1,6 +1,7 @@
 <?php
 namespace Xpressengine\Plugins\Freezer\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Xpressengine\Plugins\Freezer\Handler;
 
@@ -50,8 +51,10 @@ class FreezeCommand extends Command
 
         $count = $users->count();
 
+        $now = Carbon::now();
+
         if($count === 0) {
-            $this->warn('No users to be frozen.');
+            $this->warn("[{$now->format('Y.m.d H:i:s')}] No users to be frozen.");
             return;
         }
 
@@ -65,6 +68,6 @@ class FreezeCommand extends Command
         }
         $count = $this->handler->freeze($users);
 
-        $this->warn("$count users ware $typeTitle.".PHP_EOL);
+        $this->warn("[{$now->format('Y.m.d H:i:s')}] $count users ware $typeTitle.".PHP_EOL);
     }
 }

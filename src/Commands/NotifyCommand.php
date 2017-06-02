@@ -1,8 +1,8 @@
 <?php
 namespace Xpressengine\Plugins\Freezer\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Xpressengine\Plugins\Freezer\Handler;
 
 class NotifyCommand extends Command
@@ -48,9 +48,10 @@ class NotifyCommand extends Command
         $users = $this->handler->choose('notify');
 
         $count = $users->count();
+        $now = Carbon::now();
 
-        if($count === 0) {
-            $this->warn('No users to be notified about freezing.');
+        if ($count === 0) {
+            $this->warn("[{$now->format('Y.m.d H:i:s')}] No users to be notified about freezing.");
             return;
         }
 
@@ -64,6 +65,8 @@ class NotifyCommand extends Command
         }
         $count = $this->handler->notify($users);
 
-        $this->warn("Emails were sent to $count users.".PHP_EOL);
+        $this->warn(
+            "[{$now->format('Y.m.d H:i:s')}] Emails were sent to $count users for notify about freeze.".PHP_EOL
+        );
     }
 }
