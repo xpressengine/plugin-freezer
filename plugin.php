@@ -37,8 +37,8 @@ class Plugin extends AbstractPlugin
         $schedule = app('Illuminate\Console\Scheduling\Schedule');
         $at = array_get($this->config(), 'scheduled_at');
         if ($at) {
-            $schedule->command('freezer:freeze')->dailyAt($at)->appendOutputTo('storage/logs/freezer.log');
-            $schedule->command('freezer:notify')->dailyAt($at)->appendOutputTo('storage/logs/freezer.log');
+            $schedule->command('freezer:freeze')->dailyAt(array_get($at, 'freeze'))->appendOutputTo('storage/logs/freezer.log');
+            $schedule->command('freezer:notify')->dailyAt(array_get($at, 'notify'))->appendOutputTo('storage/logs/freezer.log');
         }
     }
 
