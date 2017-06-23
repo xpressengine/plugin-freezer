@@ -19,6 +19,48 @@ class Plugin extends AbstractPlugin
 
     protected $actions = [];
 
+    public function register()
+    {
+        app()->singleton(
+            ['freezer::handler' => Handler::class],
+            function ($app) {
+                $proxyClass = app('xe.interception')->proxy(Handler::class, 'Freezer');
+                return new $proxyClass($this, app('xe.user'));
+            }
+        );
+
+        // register commands
+        app()->singleton(
+            'freezer::command.freeze',
+            function ($app) {
+                return new FreezeCommand(app('freezer::handler'));
+            }
+        );
+        app()->singleton(
+            'freezer::command.notify',
+            function ($app) {
+                return new NotifyCommand(app('freezer::handler'));
+            }
+        );
+        app()->singleton(
+            'freezer::command.unfreeze',
+            function ($app) {
+                return new UnfreezeCommand(app('freezer::handler'));
+            }
+        );
+
+        $commands = ['freezer::command.notify', 'freezer::command.freeze', 'freezer::command.unfreeze'];
+        app('events')->listen(
+            'artisan.start',
+            function ($artisan) use ($commands) {
+                $artisan->resolveCommands($commands);
+            }
+        );
+
+
+
+    }
+
     /**
      * 이 메소드는 활성화(activate) 된 플러그인이 부트될 때 항상 실행됩니다.
      *
@@ -26,8 +68,6 @@ class Plugin extends AbstractPlugin
      */
     public function boot()
     {
-        $this->register();
-
         $this->registerMiddleware();
 
         $this->registerEvents();
@@ -158,48 +198,6 @@ class Plugin extends AbstractPlugin
     protected function registerMiddleware()
     {
         app(\Illuminate\Contracts\Http\Kernel::class)->pushMiddleware(Middleware::class);
-    }
-
-    protected function register()
-    {
-        app()->singleton(
-            ['freezer::handler' => Handler::class],
-            function ($app) {
-                $proxyClass = app('xe.interception')->proxy(Handler::class, 'Freezer');
-                return new $proxyClass($this, app('xe.user'));
-            }
-        );
-
-        // register commands
-        app()->singleton(
-            'freezer::command.freeze',
-            function ($app) {
-                return new FreezeCommand(app('freezer::handler'));
-            }
-        );
-        app()->singleton(
-            'freezer::command.notify',
-            function ($app) {
-                return new NotifyCommand(app('freezer::handler'));
-            }
-        );
-        app()->singleton(
-            'freezer::command.unfreeze',
-            function ($app) {
-                return new UnfreezeCommand(app('freezer::handler'));
-            }
-        );
-
-        $commands = ['freezer::command.notify', 'freezer::command.freeze', 'freezer::command.unfreeze'];
-        app('events')->listen(
-            'artisan.start',
-            function ($artisan) use ($commands) {
-                $artisan->resolveCommands($commands);
-            }
-        );
-
-
-
     }
 
     public function config() {
