@@ -57,8 +57,15 @@ class Plugin extends AbstractPlugin
             }
         );
 
-
-
+        // set configuration
+        $config = config('services.freezer');
+        $default = include('config.php');
+        if ($config) {
+            $new = array_replace_recursive($default, $config);
+            config(['services.freezer' => $new]);
+        } else {
+            config(['services.freezer' => $default]);
+        }
     }
 
     /**

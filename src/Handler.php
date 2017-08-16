@@ -11,6 +11,7 @@
  * @license     http://www.gnu.org/licenses/lgpl-3.0-standalone.html LGPL
  * @link        http://www.xpressengine.com
  */
+
 namespace Xpressengine\Plugins\Freezer;
 
 use Carbon\Carbon;
@@ -65,20 +66,24 @@ class Handler
     public function choose($action = 'freeze')
     {
         $users = new Collection();
-        if($action === 'freeze') {
+        if ($action === 'freeze') {
             $duration = $this->config('timer');
             $eventDate = Carbon::now()->subDays($duration);
             $users = $this->handler->where('loginAt', '<', $eventDate)->get();
-        } elseif($action === 'notify') {
+        } elseif ($action === 'notify') {
             $duration = $this->config('notify_timer');
             $eventDate = Carbon::now()->subDays($duration);
-            $candidates = User::where('loginAt', '<', $eventDate)->with(['freeze_logs' => function ($q) {
-                return $q->orderBy('createdAt', 'desc');
-            }])->get();
+            $candidates = User::where('loginAt', '<', $eventDate)->with(
+                [
+                    'freeze_logs' => function ($q) {
+                        return $q->orderBy('createdAt', 'desc');
+                    }
+                ]
+            )->get();
 
             foreach ($candidates as $user) {
                 $latestLog = $user->freeze_logs->first();
-                if(data_get($latestLog, 'action') !== 'notify') {
+                if (data_get($latestLog, 'action') !== 'notify') {
                     $users->add($user);
                 }
             }
@@ -99,7 +104,7 @@ class Handler
         $size = $this->config('queue_size', 1);
         $queue = $this->config('queue.notify', 'sync');
 
-        if($users === null) {
+        if ($users === null) {
             $users = $this->choose('notify');
         }
 
@@ -107,17 +112,16 @@ class Handler
         foreach ($users as $user) {
             $user_ids[] = $user->id;
 
-            if(count($user_ids) === $size) {
+            if (count($user_ids) === $size) {
                 $this->dispatch((new NotifyJob($user_ids, $freezeType))->onQueue($queue));
                 $user_ids = [];
             }
         }
-        if(count($user_ids)) {
-            $this->dispatch(new NotifyJob($user_ids, $freezeType));
+        if (count($user_ids)) {
+            $this->dispatch((new NotifyJob($user_ids, $freezeType))->onQueue($queue));
         }
 
         return $users->count();
-
     }
 
     /**
@@ -133,7 +137,7 @@ class Handler
         $size = $this->config('queue_size', 1);
         $queue = $this->config('queue.freeze', 'sync');
 
-        if($users === null) {
+        if ($users === null) {
             $users = $this->choose('freeze');
         }
 
@@ -141,12 +145,12 @@ class Handler
         foreach ($users as $user) {
             $user_ids[] = $user->id;
 
-            if(count($user_ids) === $size) {
-                $this->dispatch(new FreezeJob($user_ids, $freezeType));
+            if (count($user_ids) === $size) {
+                $this->dispatch((new FreezeJob($user_ids, $freezeType))->onQueue($queue));
                 $user_ids = [];
             }
         }
-        if(count($user_ids)) {
+        if (count($user_ids)) {
             $this->dispatch((new FreezeJob($user_ids, $freezeType))->onQueue($queue));
         }
         return $users->count();
@@ -154,7 +158,7 @@ class Handler
 
     public function freezeUser($user_ids)
     {
-        if(is_string($user_ids)) {
+        if (is_string($user_ids)) {
             $user_ids = [$user_ids];
         }
 
@@ -165,16 +169,16 @@ class Handler
                 $this->moveData('freeze', $user->id);
                 $this->sendEmail($user, 'freeze');
             } catch (\Exception $e) {
-                $this->logging($user->id, 'freeze' , ['message'=>$e->getMessage()], 'failed');
+                $this->logging($user->id, 'freeze', ['message' => $e->getMessage()], 'failed');
                 throw $e;
             }
-            $this->logging($user->id, 'freeze' , $user->toArray(), 'successed');
+            $this->logging($user->id, 'freeze', $user->toArray(), 'successed');
         }
     }
 
     public function deleteUser($user_ids)
     {
-        if(is_string($user_ids)) {
+        if (is_string($user_ids)) {
             $user_ids = [$user_ids];
         }
 
@@ -185,7 +189,7 @@ class Handler
                 $this->handler->leave($user->id);
                 $this->sendEmail($user, 'delete');
             } catch (\Exception $e) {
-                $this->logging($user->id, 'delete', ['message'=>$e->getMessage()], 'failed');
+                $this->logging($user->id, 'delete', ['message' => $e->getMessage()], 'failed');
                 throw $e;
             }
             $this->logging($user->id, 'delete');
@@ -194,7 +198,7 @@ class Handler
 
     public function notifyUser($user_ids)
     {
-        if(is_string($user_ids)) {
+        if (is_string($user_ids)) {
             $user_ids = [$user_ids];
         }
 
@@ -204,7 +208,7 @@ class Handler
             try {
                 $this->sendEmail($user, 'notify');
             } catch (\Exception $e) {
-                $this->logging($user->id, 'notify', ['message'=>$e->getMessage()], 'failed');
+                $this->logging($user->id, 'notify', ['message' => $e->getMessage()], 'failed');
                 throw $e;
             }
             $this->logging($user->id, 'notify');
@@ -218,7 +222,7 @@ class Handler
             $user = $this->handler->find($user_id);
             $this->sendEmail($user, 'unfreeze');
         } catch (\Exception $e) {
-            $this->logging($user_id, 'unfreeze', ['message'=>$e->getMessage()], 'failed');
+            $this->logging($user_id, 'unfreeze', ['message' => $e->getMessage()], 'failed');
             throw $e;
         }
         $this->logging($user->id, 'unfreeze');
@@ -226,24 +230,26 @@ class Handler
 
     protected function moveData($type, $user_id)
     {
-        if($type === 'freeze') {
-            $origin = 'origin'; $target = 'target';
+        if ($type === 'freeze') {
+            $origin = 'origin';
+            $target = 'target';
         } else {
-            $origin = 'target'; $target = 'origin';
+            $origin = 'target';
+            $target = 'origin';
         }
 
         // copy user table
         $table = ['origin' => 'user', 'target' => 'freezer_user'];
         $user = DB::table($table[$origin])->find($user_id);
         DB::table($table[$origin])->delete($user_id);
-        DB::table($table[$target])->insert((array)$user);
+        DB::table($table[$target])->insert((array) $user);
 
         // copy user_account table
         $table = ['origin' => 'user_account', 'target' => 'freezer_user_account'];
         $accounts = DB::table($table[$origin])->where('userId', $user_id)->get();
         DB::table($table[$origin])->where('userId', $user_id)->delete();
         foreach ($accounts as $account) {
-            DB::table($table[$target])->insert((array)$account);
+            DB::table($table[$target])->insert((array) $account);
         }
 
         // copy user_email table
@@ -251,7 +257,7 @@ class Handler
         $emails = DB::table($table[$origin])->where('userId', $user_id)->get();
         DB::table($table[$origin])->where('userId', $user_id)->delete();
         foreach ($emails as $email) {
-            DB::table($table[$target])->insert((array)$email);
+            DB::table($table[$target])->insert((array) $email);
         }
 
         // copy user_group_user
@@ -259,7 +265,7 @@ class Handler
         $group_users = DB::table($table[$origin])->where('userId', $user_id)->get();
         DB::table($table[$origin])->where('userId', $user_id)->delete();
         foreach ($group_users as $group) {
-            DB::table($table[$target])->insert((array)$group);
+            DB::table($table[$target])->insert((array) $group);
         }
     }
 
@@ -283,9 +289,9 @@ class Handler
         $content = $content($user, $type, $this->config());
 
         // type = freeze, delete, unfreeze, notify
-        $view = $this->plugin->view('views.email') ;
+        $view = $this->plugin->view('views.email');
         $emailAddr = $user->email;
-        if($emailAddr) {
+        if ($emailAddr) {
             app('mailer')->queue(
                 $view,
                 compact('content'),
@@ -300,12 +306,12 @@ class Handler
     public function attempt($credentials = [])
     {
 
-        if(array_has($credentials, 'password')) { // 이메일/비번 로그인
+        if (array_has($credentials, 'password')) { // 이메일/비번 로그인
             $email = array_get($credentials, 'email');
             $userInfo = DB::table('freezer_user')->where('email', $email)->first();
-            if($userInfo !== null) {
+            if ($userInfo !== null) {
                 $plain = $credentials['password'];
-                if(app('hash')->check($plain, $userInfo->password)) {
+                if (app('hash')->check($plain, $userInfo->password)) {
                     return $userInfo->id;
                 }
             }
@@ -316,11 +322,11 @@ class Handler
             // account info가 freeze 되어 있다면 바로 반환
             // email info가 freeze 되어 있다면,
             $accountInfo = DB::table('freezer_user_account')->where('accountId', $account_id)->first();
-            if($accountInfo !== null) {
+            if ($accountInfo !== null) {
                 return $accountInfo->userId;
-            } elseif($email !== null) {
+            } elseif ($email !== null) {
                 $emailInfo = DB::table('freezer_user_email')->where('address', $email)->first();
-                if($emailInfo !== null) {
+                if ($emailInfo !== null) {
                     return $emailInfo->userId;
                 }
             }
@@ -330,10 +336,10 @@ class Handler
             if ($userInfo !== null) {
                 return $userInfo->id;
             }
-        } elseif(array_has($credentials, 'address')) { // 이메일 검사
+        } elseif (array_has($credentials, 'address')) { // 이메일 검사
             $address = array_get($credentials, 'address');
             $emailInfo = DB::table('freezer_user_email')->where('address', $address)->first();
-            if($emailInfo !== null) {
+            if ($emailInfo !== null) {
                 return $emailInfo->userId;
             }
         }
