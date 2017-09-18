@@ -21,13 +21,11 @@ class Plugin extends AbstractPlugin
 
     public function register()
     {
-        app()->singleton(
-            ['freezer::handler' => Handler::class],
-            function ($app) {
-                $proxyClass = app('xe.interception')->proxy(Handler::class, 'Freezer');
-                return new $proxyClass($this, app('xe.user'));
-            }
-        );
+        app()->singleton(Handler::class, function ($app) {
+            $proxyClass = app('xe.interception')->proxy(Handler::class, 'Freezer');
+            return new $proxyClass($this, app('xe.user'));
+        });
+        app()->alias(Handler::class, 'freezer::handler');
 
         // register commands
         app()->singleton(
