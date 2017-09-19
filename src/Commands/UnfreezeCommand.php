@@ -52,7 +52,7 @@ class UnfreezeCommand extends Command
 
         if ($this->input->isInteractive() && $this->confirm(
                 // 총 x명의 회원을 휴면처리 하려고 합니다. 실행하시겠습니까?
-                "'{$userInfo->displayName}' users will be unfreezed. Do you want to execute it?"
+                "'{$userInfo->display_name}' users will be unfreezed. Do you want to execute it?"
             ) === false
         ) {
             $this->warn('Process is canceled by you.');

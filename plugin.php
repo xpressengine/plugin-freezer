@@ -156,7 +156,7 @@ class Plugin extends AbstractPlugin
 
                 $result = $target($name);
                 if($result === true) {
-                    $frozenId = app('freezer::handler')->attempt(['displayName' => $name]);
+                    $frozenId = app('freezer::handler')->attempt(['display_name' => $name]);
                     if($frozenId !== null) {
                         throw new DisplayNameAlreadyExistsException();
                     }
@@ -255,18 +255,18 @@ class Plugin extends AbstractPlugin
                 $table->engine = "InnoDB";
 
                 $table->string('id', 36);
-                $table->string('displayName', 255)->unique();
+                $table->string('display_name', 255)->unique();
                 $table->string('email', 255)->nullable();
                 $table->string('password', 255)->nullable();
                 $table->string('rating', 15)->default('member');
                 $table->char('status', 20);
                 $table->text('introduction')->default(null)->nullable();
-                $table->string('profileImageId', 36)->nullable();
-                $table->string('rememberToken', 255)->nullable();
-                $table->timestamp('loginAt');
-                $table->timestamp('createdAt')->index();
-                $table->timestamp('updatedAt')->index();
-                $table->timestamp('passwordUpdatedAt');
+                $table->string('profile_image_id', 36)->nullable();
+                $table->string('remember_token', 255)->nullable();
+                $table->timestamp('login_at');
+                $table->timestamp('created_at')->index();
+                $table->timestamp('updated_at')->index();
+                $table->timestamp('password_updated_at');
 
                 $table->primary('id');
             });
@@ -277,13 +277,13 @@ class Plugin extends AbstractPlugin
                 $table->engine = "InnoDB";
 
                 $table->increments('id');
-                $table->string('groupId', 36);
-                $table->string('userId', 36);
-                $table->timestamp('createdAt');
+                $table->string('group_id', 36);
+                $table->string('user_id', 36);
+                $table->timestamp('created_at');
 
-                $table->unique(['groupId','userId']);
-                $table->index('groupId');
-                $table->index('userId');
+                $table->unique(['group_id','user_id']);
+                $table->index('group_id');
+                $table->index('user_id');
             });
         }
 
@@ -292,18 +292,18 @@ class Plugin extends AbstractPlugin
                 $table->engine = "InnoDB";
 
                 $table->string('id', 36);
-                $table->string('userId');
-                $table->string('accountId');
+                $table->string('user_id');
+                $table->string('account_id');
                 $table->string('email')->nullable();
                 $table->char('provider', 20);
                 $table->string('token', 500);
-                $table->string('tokenSecret', 500);
+                $table->string('token_secret', 500);
                 $table->string('data');
-                $table->timestamp('createdAt');
-                $table->timestamp('updatedAt');
+                $table->timestamp('created_at');
+                $table->timestamp('updated_at');
 
                 $table->primary('id');
-                $table->unique(['provider','accountId']);
+                $table->unique(['provider','account_id']);
             });
         }
 
@@ -312,12 +312,12 @@ class Plugin extends AbstractPlugin
                 $table->engine = "InnoDB";
 
                 $table->increments('id');
-                $table->string('userId', 36);
+                $table->string('user_id', 36);
                 $table->string('address');
-                $table->timestamp('createdAt')->index();
-                $table->timestamp('updatedAt');
+                $table->timestamp('created_at')->index();
+                $table->timestamp('updated_at');
 
-                $table->index('userId');
+                $table->index('user_id');
                 $table->index('address');
             });
         }
@@ -327,13 +327,13 @@ class Plugin extends AbstractPlugin
                 $table->engine = "InnoDB";
 
                 $table->increments('id');
-                $table->string('userId', 36);
+                $table->string('user_id', 36);
                 $table->string('action', 20); // freeze, delete, unfreeze, notify
                 $table->string('result', 20); // successd, failed
                 $table->string('content');
-                $table->timestamp('createdAt')->index();
-                $table->timestamp('updatedAt');
-                $table->index('userId');
+                $table->timestamp('created_at')->index();
+                $table->timestamp('updated_at');
+                $table->index('user_id');
             });
         }
     }

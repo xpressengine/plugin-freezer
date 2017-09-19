@@ -69,14 +69,14 @@ class Handler
         if ($action === 'freeze') {
             $duration = $this->config('timer');
             $eventDate = Carbon::now()->subDays($duration);
-            $users = $this->handler->where('loginAt', '<', $eventDate)->get();
+            $users = $this->handler->where('login_at', '<', $eventDate)->get();
         } elseif ($action === 'notify') {
             $duration = $this->config('notify_timer');
             $eventDate = Carbon::now()->subDays($duration);
-            $candidates = User::where('loginAt', '<', $eventDate)->with(
+            $candidates = User::where('login_at', '<', $eventDate)->with(
                 [
                     'freeze_logs' => function ($q) {
-                        return $q->orderBy('createdAt', 'desc');
+                        return $q->orderBy('created_at', 'desc');
                     }
                 ]
             )->get();
@@ -246,24 +246,24 @@ class Handler
 
         // copy user_account table
         $table = ['origin' => 'user_account', 'target' => 'freezer_user_account'];
-        $accounts = DB::table($table[$origin])->where('userId', $user_id)->get();
-        DB::table($table[$origin])->where('userId', $user_id)->delete();
+        $accounts = DB::table($table[$origin])->where('user_id', $user_id)->get();
+        DB::table($table[$origin])->where('user_id', $user_id)->delete();
         foreach ($accounts as $account) {
             DB::table($table[$target])->insert((array) $account);
         }
 
         // copy user_email table
         $table = ['origin' => 'user_email', 'target' => 'freezer_user_email'];
-        $emails = DB::table($table[$origin])->where('userId', $user_id)->get();
-        DB::table($table[$origin])->where('userId', $user_id)->delete();
+        $emails = DB::table($table[$origin])->where('user_id', $user_id)->get();
+        DB::table($table[$origin])->where('user_id', $user_id)->delete();
         foreach ($emails as $email) {
             DB::table($table[$target])->insert((array) $email);
         }
 
         // copy user_group_user
         $table = ['origin' => 'user_group_user', 'target' => 'freezer_user_group_user'];
-        $group_users = DB::table($table[$origin])->where('userId', $user_id)->get();
-        DB::table($table[$origin])->where('userId', $user_id)->delete();
+        $group_users = DB::table($table[$origin])->where('user_id', $user_id)->get();
+        DB::table($table[$origin])->where('user_id', $user_id)->delete();
         foreach ($group_users as $group) {
             DB::table($table[$target])->insert((array) $group);
         }
@@ -273,7 +273,7 @@ class Handler
     {
         // type = freeze, delete, unfreeze, notify
         $log = new Log();
-        $log->userId = $user_id;
+        $log->user_id = $user_id;
         $log->action = $action;
         $log->result = $result;
         $log->content = $content;
@@ -321,18 +321,18 @@ class Handler
 
             // account info가 freeze 되어 있다면 바로 반환
             // email info가 freeze 되어 있다면,
-            $accountInfo = DB::table('freezer_user_account')->where('accountId', $account_id)->first();
+            $accountInfo = DB::table('freezer_user_account')->where('account_id', $account_id)->first();
             if ($accountInfo !== null) {
-                return $accountInfo->userId;
+                return $accountInfo->user_id;
             } elseif ($email !== null) {
                 $emailInfo = DB::table('freezer_user_email')->where('address', $email)->first();
                 if ($emailInfo !== null) {
-                    return $emailInfo->userId;
+                    return $emailInfo->user_id;
                 }
             }
-        } elseif (array_has($credentials, 'displayName')) { // 이름 검사
-            $name = array_get($credentials, 'displayName');
-            $userInfo = DB::table('freezer_user')->where('displayName', $name)->first();
+        } elseif (array_has($credentials, 'display_name')) { // 이름 검사
+            $name = array_get($credentials, 'display_name');
+            $userInfo = DB::table('freezer_user')->where('display_name', $name)->first();
             if ($userInfo !== null) {
                 return $userInfo->id;
             }
@@ -340,7 +340,7 @@ class Handler
             $address = array_get($credentials, 'address');
             $emailInfo = DB::table('freezer_user_email')->where('address', $address)->first();
             if ($emailInfo !== null) {
-                return $emailInfo->userId;
+                return $emailInfo->user_id;
             }
         }
 

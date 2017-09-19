@@ -28,6 +28,6 @@ class User extends OriginUser
 {
     public function freeze_logs()
     {
-        return $this->hasMany(Log::class, 'userId');
+        return $this->hasMany(Log::class, 'user_id');
     }
 }
