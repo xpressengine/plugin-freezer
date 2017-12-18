@@ -1,6 +1,7 @@
 <?php
 namespace Xpressengine\Plugins\Freezer;
 
+use Illuminate\Console\Application as Artisan;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\RedirectResponse;
 use Schema;
@@ -48,12 +49,9 @@ class Plugin extends AbstractPlugin
         );
 
         $commands = ['freezer::command.notify', 'freezer::command.freeze', 'freezer::command.unfreeze'];
-        app('events')->listen(
-            'artisan.start',
-            function ($artisan) use ($commands) {
-                $artisan->resolveCommands($commands);
-            }
-        );
+        Artisan::starting(function ($artisan) use ($commands) {
+            $artisan->resolveCommands($commands);
+        });
 
         // set configuration
         $config = config('services.freezer');

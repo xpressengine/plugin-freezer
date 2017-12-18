@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Xpressengine\Plugins\Freezer\Jobs\FreezeJob;
 use Xpressengine\Plugins\Freezer\Jobs\NotifyJob;
+use Xpressengine\Plugins\Freezer\Mails\Common;
 use Xpressengine\Plugins\Freezer\Models\Log;
 use Xpressengine\Plugins\Freezer\Models\User;
 use Xpressengine\User\UserHandler;
@@ -292,14 +293,7 @@ class Handler
         $view = $this->plugin->view('views.email');
         $emailAddr = $user->email;
         if ($emailAddr) {
-            app('mailer')->queue(
-                $view,
-                compact('content'),
-                function ($message) use ($emailAddr, $subject) {
-                    $message->to($emailAddr)->subject($subject);
-                },
-                'sync'
-            );
+            app('mailer')->to($emailAddr)->queue(new Common($view, $subject, compact('content')));
         }
     }
 

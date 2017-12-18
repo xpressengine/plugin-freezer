@@ -1,21 +1,25 @@
 <?php
 namespace Xpressengine\Plugins\Freezer\Jobs;
 
-use App\Jobs\Job;
 use DB;
-use Illuminate\Contracts\Bus\SelfHandling;
+use Illuminate\Bus\Queueable;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Xpressengine\Plugins\Freezer\Handler;
 
 /**
  * @category
  * @package     Xpressengine\Plugins\Store\Jobs
- * @author      XE Team (khongchi) <khongchi@xpressengine.com>
+ * @author      XE Team (developers) <developers@xpressengine.com>
  * @license     http://www.gnu.org/licenses/lgpl-3.0-standalone.html LGPL
  * @link        http://www.xpressengine.com
  */
-class FreezeJob extends Job implements SelfHandling, ShouldQueue
+class FreezeJob implements ShouldQueue
 {
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
     /**
      * @var string|array
      */

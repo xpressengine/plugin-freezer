@@ -101,7 +101,7 @@ $ php artisan freezer:freeze
 ```
 $ php artisan freezer:unfreeze aa972e8b-6a73-459a-af18-22e7991d43ad
 
- 'khongchi' users will be unfreezed. Do you want to execute it? (yes/no) [no]:
+ 'someone' users will be unfreezed. Do you want to execute it? (yes/no) [no]:
  > yes
 
 the user was unfreezed.
