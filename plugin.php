@@ -1,6 +1,7 @@
 <?php
 namespace Xpressengine\Plugins\Freezer;
 
+use App\Events\PreResetUserPasswordEvent;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\RedirectResponse;
@@ -11,6 +12,8 @@ use Xpressengine\Plugins\Freezer\Commands\FreezeCommand;
 use Xpressengine\Plugins\Freezer\Commands\NotifyCommand;
 use Xpressengine\Plugins\Freezer\Commands\UnfreezeCommand;
 use Xpressengine\Plugins\Freezer\Middlewares\Middleware;
+use Xpressengine\Plugins\Freezer\Models\User;
+use Xpressengine\User\Events\UserRetrievedEvent;
 use Xpressengine\User\Exceptions\DisplayNameAlreadyExistsException;
 use Xpressengine\User\Exceptions\EmailAlreadyExistsException;
 use Xpressengine\User\UserInterface;
@@ -112,6 +115,33 @@ class Plugin extends AbstractPlugin
                 }
             }
             return $result;
+        });
+
+        // core 비밀번호 찾기 시도시
+        \Event::listen(UserRetrievedEvent::class, function ($eventData) {
+            if (request()->route()->getName() == 'auth.reset' && $eventData->user === null) {
+                $frozenId = app('freezer::handler')->attempt(['address' => $eventData->credentials['email']]);
+
+                $frozenUser = User::where('id', $frozenId)->first();
+
+                $eventData->user = $frozenUser;
+            }
+        });
+
+        // 비밀번호 재설정 하기 전 검사
+        \Event::listen(PreResetUserPasswordEvent::class, function ($eventData) {
+            $frozenId = app('freezer::handler')->attempt($eventData->credentials);
+
+            if ($frozenId !== null) {
+                \DB::beginTransaction();
+                try {
+                    app('freezer::handler')->unfreeze($frozenId);
+                } catch (\Exception $e) {
+                    \DB::rollBack();
+                    throw $e;
+                }
+                \DB::commit();
+            }
         });
 
         // social_login - login 시도시
