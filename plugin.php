@@ -130,7 +130,7 @@ class Plugin extends AbstractPlugin
 
         // 비밀번호 재설정 하기 전 검사
         \Event::listen(PreResetUserPasswordEvent::class, function ($eventData) {
-            $frozenId = app('freezer::handler')->attempt($eventData->credentials);
+            $frozenId = app('freezer::handler')->attempt(['address' => $eventData->credentials['email']]);
 
             if ($frozenId !== null) {
                 \DB::beginTransaction();
