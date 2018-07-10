@@ -22,6 +22,7 @@ use Xpressengine\Plugins\Freezer\Jobs\FreezeJob;
 use Xpressengine\Plugins\Freezer\Jobs\NotifyJob;
 use Xpressengine\Plugins\Freezer\Mails\Common;
 use Xpressengine\Plugins\Freezer\Models\Log;
+use Xpressengine\Plugins\Freezer\Models\PasswordSkip;
 use Xpressengine\Plugins\Freezer\Models\User;
 use Xpressengine\User\UserHandler;
 
@@ -339,5 +340,44 @@ class Handler
         }
 
         return null;
+    }
+
+    public function isPasswordProtectTarget($user)
+    {
+        $config = $this->config('password_protector');
+        if ($config['use'] == false) {
+            return false;
+        }
+
+        $timer = $config['timer'];
+        $now = Carbon::now();
+        if ($now->gt($user->password_updated_at->addDays($timer))) {
+            $skip = PasswordSkip::where('user_id', $user->id)
+                ->where('next_check_at', '>', $now)->first();
+            if ($skip == null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function passwordProtectSkip($userId, $email, array $data = [])
+    {
+        $nextCheckTimer = $this->config('password_protector.next_check_timer');
+
+        $skip = PasswordSkip::where('user_id', $userId)->first();
+        if ($skip == null) {
+            $skip = new PasswordSkip();
+            $skip->user_id = $userId;
+            $skip->email = $email;
+            $skip->action = array_get($data, 'action', 'default');
+        }
+        $skip->next_check_at = Carbon::now()->addDays($nextCheckTimer);;
+        $skip->save();
+    }
+
+    public function dropPasswordProtectSkip($userId)
+    {
+        PasswordSkip::where('user_id', $userId)->delete();
     }
 }

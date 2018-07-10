@@ -17,6 +17,8 @@ use Xpressengine\User\Events\UserRetrievedEvent;
 use Xpressengine\User\Exceptions\DisplayNameAlreadyExistsException;
 use Xpressengine\User\Exceptions\EmailAlreadyExistsException;
 use Xpressengine\User\UserInterface;
+use Route;
+use Illuminate\Auth\Events\Login;
 
 class Plugin extends AbstractPlugin
 {
@@ -226,6 +228,21 @@ class Plugin extends AbstractPlugin
             }
         );
 
+        // login 성공
+        \Event::listen(Login::class, function ($eventData) {
+            // 비밀번호 변경 대상일 경우 처리
+            if (app(Handler::class)->isPasswordProtectTarget($eventData->user)) {
+                // 다음 이동 페이지 설정을 조작해서 비밀번호 변경 페이지로 이동
+                $request = app('request');
+                $redirectUrl = $request->get('redirectUrl',
+                    $request->session()->pull('url.intended') ?: url()->previous());
+
+                $params = [
+                    'redirectUrl' => $redirectUrl
+                ];
+                $request->session()->put('url.intended', route('freezer::password_protector.index', $params));
+            }
+        });
     }
 
     protected function registerMiddleware()
@@ -240,6 +257,16 @@ class Plugin extends AbstractPlugin
     protected function route()
     {
         // implement code
+        Route::group([
+            'namespace' => 'Xpressengine\\Plugins\\Freezer\\Controllers'
+            , 'as' => 'freezer::password_protector.'
+            , 'middleware' => ['web', 'auth']
+            , 'prefix' => 'password_protector',
+        ], function () {
+            Route::get('/', ['as' => 'index', 'uses' => 'PasswordProtectorController@index']);
+            Route::post('/reset', ['as' => 'reset', 'uses' => 'PasswordProtectorController@reset']);
+            Route::get('/skip', ['as' => 'skip', 'uses' => 'PasswordProtectorController@skip']);
+        });
     }
 
     /**
@@ -364,6 +391,20 @@ class Plugin extends AbstractPlugin
                 $table->index('user_id');
             });
         }
+
+        if(!Schema::hasTable('freezer_password_skip')) {
+            Schema::create('freezer_password_skip', function (Blueprint $table) {
+                $table->engine = "InnoDB";
+
+                $table->increments('id');
+                $table->string('user_id', 36);
+                $table->string('email', 255);
+                $table->string('action', 20)->default('default'); // default, ..
+                $table->timestamp('next_check_at');
+                $table->timestamp('created_at');
+                $table->timestamp('updated_at');
+            });
+        }
     }
 
     /**
@@ -378,7 +419,8 @@ class Plugin extends AbstractPlugin
                && Schema::hasTable('freezer_user_group_user')
                && Schema::hasTable('freezer_user_account')
                && Schema::hasTable('freezer_user_email')
-               && Schema::hasTable('freezer_log');
+               && Schema::hasTable('freezer_log')
+               && Schema::hasTable('freezer_password_skip');
     }
 
     /**

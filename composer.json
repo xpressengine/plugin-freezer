@@ -23,14 +23,22 @@
   "extra": {
     "xpressengine": {
       "title": "휴면계정 관리",
-      "component": {}
+      "component": {
+        "password_protector/freezer/skin/freezer@default": {
+          "class": "Xpressengine\\Plugins\\Freezer\\Components\\Skins\\PasswordProtector\\PasswordProtectorSkin",
+          "name": "비밀번호 변경하기 스킨",
+          "description": "",
+          "screenshot" : []
+        }
+      }
     }
   },
   "require": {
   },
   "autoload": {
     "psr-4": {
-      "Xpressengine\\Plugins\\Freezer\\": "src/"
+      "Xpressengine\\Plugins\\Freezer\\": "src/",
+      "Xpressengine\\Plugins\\Freezer\\Components\\": "components"
     }
   }
 }

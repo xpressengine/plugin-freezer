@@ -30,5 +30,14 @@ return [
         'unfreeze' => ['subject' => '휴면개정 복구 결과 안내', 'content' => function($user, $type, $config) {
             return "{$user->getDisplayName()}님, 장기간 서비스를 이용하지 않아 분리 보관했던 계정 정보가 다시 정상적으로 복구되었습니다. <br> 이제부터 서비스를 다시 이용할 수 있습니다 ";
         }],
-    ]
+    ],
+
+    // 비밀번호 변경
+    'password_protector' => [
+        'use' => true,
+        'timer' => 180,  // 비밀번호 변경 페이지로 이동 할 마지막 로그인 시도로부터의 경과일 (30을 할 경우 1개월로 설정, 안내) (180 => 6개월, 190 => 190일 로 표기)
+        'skin_id' => 'password_protector/freezer/skin/password_protector@default', // 스킨 컴포넌트 아이디,
+        'send_skip_email' => true,  // 다음에 변경하기 선택 시 안내이메일 발송 여부
+        'next_check_timer' => 30,   // 다음에 변경하기 할 경우 기간 설정 (30을 할 경우 1개월로 설정, 안내) (30 => 1개월, 40 => 40일 로 표기)
+    ],
 ];
