@@ -296,6 +296,10 @@ class Plugin extends AbstractPlugin
     public function activate($installedVersion = null)
     {
         // implement code
+        // put board translation source
+        /** @var \Xpressengine\Translation\Translator $trans */
+        $trans = app('xe.translator');
+        $trans->putFromLangDataSource('freezer', base_path('plugins/freezer/langs/lang.php'));
     }
 
     /**
