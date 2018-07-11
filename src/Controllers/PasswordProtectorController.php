@@ -4,6 +4,7 @@ namespace Xpressengine\Plugins\Freezer\Controllers;
 use App\Http\Controllers\Controller;
 use Xpressengine\Http\Request;
 use XePresenter;
+use XeSkin;
 use Illuminate\Contracts\Auth\PasswordBroker;
 use App\Events\PreResetUserPasswordEvent;
 use Xpressengine\Plugins\Freezer\Handler;
@@ -20,9 +21,11 @@ class PasswordProtectorController extends Controller
         'current_password' => 'required',
         'password' => 'required|confirmed|password',
     ];
-    public function __construct()
+    public function __construct(Handler $handler)
     {
-        XePresenter::setSkinTargetId('password_protector/freezer');
+        $skinTarget = 'password_protector/freezer';
+        XeSkin::setDefaultSkin($skinTarget, $handler->config('password_protector.skin_id'));
+        XePresenter::setSkinTargetId($skinTarget);
     }
 
     public function index(Request $request, Handler $handler)

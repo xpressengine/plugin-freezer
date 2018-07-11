@@ -36,7 +36,7 @@ return [
     'password_protector' => [
         'use' => true,
         'timer' => 180,  // 비밀번호 변경 페이지로 이동 할 마지막 로그인 시도로부터의 경과일 (30을 할 경우 1개월로 설정, 안내) (180 => 6개월, 190 => 190일 로 표기)
-        'skin_id' => 'password_protector/freezer/skin/password_protector@default', // 스킨 컴포넌트 아이디,
+        'skin_id' => 'password_protector/freezer/skin/freezer@default', // 스킨 컴포넌트 아이디,
         'send_skip_email' => true,  // 다음에 변경하기 선택 시 안내이메일 발송 여부
         'next_check_timer' => 30,   // 다음에 변경하기 할 경우 기간 설정 (30을 할 경우 1개월로 설정, 안내) (30 => 1개월, 40 => 40일 로 표기)
     ],
