@@ -348,6 +348,10 @@ class Handler
         if ($config['use'] == false) {
             return false;
         }
+        
+        if (!$user->password_updated_at) {
+            return false;
+        }
 
         $timer = $config['timer'];
         $now = Carbon::now();
