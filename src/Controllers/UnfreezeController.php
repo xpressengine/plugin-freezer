@@ -33,6 +33,7 @@ class UnfreezeController extends Controller
         $frozenId = $request->session()->pull('unfreeze_id');
         app('freezer::handler')->unfreeze($frozenId);
 
-        return redirect()->to(route('login', ['redirectUrl' => '/']));
+        return redirect()->to(route('login', ['redirectUrl' => '/']))
+            ->with('alert', ['type' => 'info', 'message' => xe_trans('freezer::msgUserAccountActivated')]);
     }
 }

@@ -44,5 +44,9 @@ return [
     'descriptionActivationUserAccount' => [
         'ko' => '회원님의 계정을 안전하게 보호하기 위해 휴면상태로 전환했습니다. 서비스를 이용하려면 휴면계정 활성화 버튼을 클릭하세요.',
         'en' => 'We have switched to inactive status to keep your account safe. To use the service, click the "Activate user account" button.',
-    ]
+    ],
+    'msgUserAccountActivated' => [
+        'ko' => '휴면계정이 활성화 되었습니다.',
+        'en' => 'Account has been activated.'
+    ],
 ];

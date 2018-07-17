@@ -12,7 +12,7 @@ XeFrontend::css(
 
     <p class="sub-text">{{xe_trans('freezer::descriptionActivationUserAccount')}}</p>
 
-    <form role="form" method="POST" action="{{ route('freezer::unfreeze.activate') }}" data-rule="reset">
+    <form role="form" method="POST" action="{{ route('freezer::unfreeze.activate') }}">
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
         <button type="submit" class="xe-btn xe-btn-primary">{{xe_trans('freezer::activateUserAccount')}}</button>
     </form>
