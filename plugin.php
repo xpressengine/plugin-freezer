@@ -109,7 +109,7 @@ class Plugin extends AbstractPlugin
                     }
                     \DB::commit();
 
-                    $this->addAction(function($request, $response) {
+                    $this->addAction('unfreeze_alert', function($request, $response) {
                         /** @var RedirectResponse $response */
                         return $response->with('alert', ['type' => 'warning', 'message' => '휴면 상태의 계정을 복구후 로그인되었습니다.']);
                     });
@@ -161,7 +161,7 @@ class Plugin extends AbstractPlugin
                 }
                 \DB::commit();
 
-                $this->addAction(function($request, $response) {
+                $this->addAction('unfreeze_alert', function($request, $response) {
                     /** @var RedirectResponse $response */
                     return $response->with('alert', ['type' => 'warning', 'message' => '휴면 상태의 계정을 복구후 로그인되었습니다.']);
                 });
@@ -272,13 +272,14 @@ class Plugin extends AbstractPlugin
     /**
      * addAction
      *
+     * @param stirng  $alias
      * @param Closure $action
      *
      * @return void
      */
-    public function addAction($action)
+    public function addAction($alias, $action)
     {
-        $this->actions[] = $action;
+        $this->actions[$alias] = $action;
     }
 
     public function getActions()
@@ -420,11 +421,11 @@ class Plugin extends AbstractPlugin
     public function checkInstalled()
     {
         return Schema::hasTable('freezer_user')
-               && Schema::hasTable('freezer_user_group_user')
-               && Schema::hasTable('freezer_user_account')
-               && Schema::hasTable('freezer_user_email')
-               && Schema::hasTable('freezer_log')
-               && Schema::hasTable('freezer_password_skip');
+            && Schema::hasTable('freezer_user_group_user')
+            && Schema::hasTable('freezer_user_account')
+            && Schema::hasTable('freezer_user_email')
+            && Schema::hasTable('freezer_log')
+            && Schema::hasTable('freezer_password_skip');
     }
 
     /**
