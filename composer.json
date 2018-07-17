@@ -29,6 +29,12 @@
           "name": "비밀번호 변경하기 스킨",
           "description": "",
           "screenshot" : []
+        },
+        "unfreeze/freezer/skin/freezer@default": {
+          "class": "Xpressengine\\Plugins\\Freezer\\Components\\Skins\\Unfreeze\\UnfreezeSkin",
+          "name": "휴면계정 활성화 안내 스킨",
+          "description": "",
+          "screenshot" : []
         }
       }
     }

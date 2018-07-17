@@ -99,6 +99,18 @@ class Plugin extends AbstractPlugin
             if($result === false) {
                 $frozenId = app('freezer::handler')->attempt($credentials);
 
+                $useUnfreezePage = array_get($this->config(), 'use_unfreeze_page');
+                if($frozenId !== null && $useUnfreezePage == true) {
+                    /**
+                     * 로그인 관련 처리 정료
+                     * url.intended 변경해서 페이지 이동 처리
+                     */
+                    $request = app('request');
+                    $request->session()->flash('unfreeze_id', $frozenId);
+                    $request->session()->put('url.intended', route('freezer::unfreeze.index'));
+                    return true;
+                }
+
                 if($frozenId !== null) {
                     \DB::beginTransaction();
                     try {
@@ -150,6 +162,18 @@ class Plugin extends AbstractPlugin
         intercept('SocialLoginAuth@login', 'freezer::social_login', function($target, $userInfo){
 
             $frozenId = app('freezer::handler')->attempt($userInfo);
+
+            $useUnfreezePage = array_get($this->config(), 'use_unfreeze_page');
+            if($frozenId !== null && $useUnfreezePage == true) {
+                /**
+                 * 로그인 관련 처리 정료
+                 * url.intended 변경해서 페이지 이동 처리
+                 */
+                $request = app('request');
+                $request->session()->flash('unfreeze_id', $frozenId);
+                $request->session()->put('url.intended', route('freezer::unfreeze.index'));
+                return true;
+            }
 
             if($frozenId !== null) {
                 \DB::beginTransaction();
@@ -267,6 +291,17 @@ class Plugin extends AbstractPlugin
             Route::post('/reset', ['as' => 'reset', 'uses' => 'PasswordProtectorController@reset']);
             Route::get('/skip', ['as' => 'skip', 'uses' => 'PasswordProtectorController@skip']);
         });
+
+        // implement code
+        Route::group([
+            'namespace' => 'Xpressengine\\Plugins\\Freezer\\Controllers'
+            , 'as' => 'freezer::unfreeze.'
+            , 'middleware' => ['web',]
+            , 'prefix' => 'unfreeze',
+        ], function () {
+            Route::get('/', ['as' => 'index', 'uses' => 'UnfreezeController@index']);
+            Route::post('/activate', ['as' => 'activate', 'uses' => 'UnfreezeController@activate']);
+        });
     }
 
     /**
@@ -282,6 +317,11 @@ class Plugin extends AbstractPlugin
         $this->actions[$alias] = $action;
     }
 
+    /**
+     * get actions
+     *
+     * @return array
+     */
     public function getActions()
     {
         return $this->actions;

@@ -37,4 +37,12 @@ return [
         'ko' => '주기적으로 비밀번호를 변경해 주세요.',
         'en' => 'Please change your password periodically.',
     ],
+    'activateUserAccount' => [
+        'ko' => '휴면계정 활성화',
+        'en' => 'Activate user account',
+    ],
+    'descriptionActivationUserAccount' => [
+        'ko' => '회원님의 계정을 안전하게 보호하기 위해 휴면상태로 전환했습니다. 서비스를 이용하려면 휴면계정 활성화 버튼을 클릭하세요.',
+        'en' => 'We have switched to inactive status to keep your account safe. To use the service, click the "Activate user account" button.',
+    ]
 ];
