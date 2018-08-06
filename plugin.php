@@ -398,7 +398,6 @@ class Plugin extends AbstractPlugin
                 $table->char('provider', 20);
                 $table->string('token', 500);
                 $table->string('token_secret', 500);
-                $table->string('data');
                 $table->timestamp('created_at')->nullable();
                 $table->timestamp('updated_at')->nullable();
 
