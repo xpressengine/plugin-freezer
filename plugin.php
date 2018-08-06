@@ -358,15 +358,15 @@ class Plugin extends AbstractPlugin
                 $table->string('display_name', 255)->unique();
                 $table->string('email', 255)->nullable();
                 $table->string('password', 255)->nullable();
-                $table->string('rating', 15)->default('member');
+                $table->string('rating', 15)->default('user');
                 $table->char('status', 20);
                 $table->text('introduction')->default(null)->nullable();
                 $table->string('profile_image_id', 36)->nullable();
                 $table->string('remember_token', 255)->nullable();
-                $table->timestamp('login_at');
-                $table->timestamp('created_at')->index();
-                $table->timestamp('updated_at')->index();
-                $table->timestamp('password_updated_at');
+                $table->timestamp('login_at')->nullable();
+                $table->timestamp('created_at')->nullable()->index();
+                $table->timestamp('updated_at')->nullable()->index();
+                $table->timestamp('password_updated_at')->nullable();
 
                 $table->primary('id');
             });
@@ -379,7 +379,7 @@ class Plugin extends AbstractPlugin
                 $table->increments('id');
                 $table->string('group_id', 36);
                 $table->string('user_id', 36);
-                $table->timestamp('created_at');
+                $table->timestamp('created_at')->nullable();
 
                 $table->unique(['group_id','user_id']);
                 $table->index('group_id');
@@ -399,8 +399,8 @@ class Plugin extends AbstractPlugin
                 $table->string('token', 500);
                 $table->string('token_secret', 500);
                 $table->string('data');
-                $table->timestamp('created_at');
-                $table->timestamp('updated_at');
+                $table->timestamp('created_at')->nullable();
+                $table->timestamp('updated_at')->nullable();
 
                 $table->primary('id');
                 $table->unique(['provider','account_id']);
@@ -414,8 +414,8 @@ class Plugin extends AbstractPlugin
                 $table->increments('id');
                 $table->string('user_id', 36);
                 $table->string('address');
-                $table->timestamp('created_at')->index();
-                $table->timestamp('updated_at');
+                $table->timestamp('created_at')->nullable()->index();
+                $table->timestamp('updated_at')->nullable();
 
                 $table->index('user_id');
                 $table->index('address');
@@ -431,8 +431,8 @@ class Plugin extends AbstractPlugin
                 $table->string('action', 20); // freeze, delete, unfreeze, notify
                 $table->string('result', 20); // successd, failed
                 $table->string('content');
-                $table->timestamp('created_at')->index();
-                $table->timestamp('updated_at');
+                $table->timestamp('created_at')->nullable()->index();
+                $table->timestamp('updated_at')->nullable();
                 $table->index('user_id');
             });
         }
@@ -446,8 +446,8 @@ class Plugin extends AbstractPlugin
                 $table->string('email', 255);
                 $table->string('action', 20)->default('default'); // default, ..
                 $table->timestamp('next_check_at');
-                $table->timestamp('created_at');
-                $table->timestamp('updated_at');
+                $table->timestamp('created_at')->nullable();
+                $table->timestamp('updated_at')->nullable();
             });
         }
     }
