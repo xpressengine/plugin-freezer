@@ -25,6 +25,8 @@ use Xpressengine\Plugins\Freezer\Models\Log;
 use Xpressengine\Plugins\Freezer\Models\PasswordSkip;
 use Xpressengine\Plugins\Freezer\Models\User;
 use Xpressengine\User\UserHandler;
+use Xpressengine\Support\Notifications\Notice;
+use Illuminate\Notifications\Notifiable;
 
 /**
  * @category
@@ -293,9 +295,55 @@ class Handler
         // type = freeze, delete, unfreeze, notify
         $view = $this->plugin->view('views.email');
         $emailAddr = $user->email;
-        if ($emailAddr) {
-            app('mailer')->to($emailAddr)->queue(new Common($view, $subject, compact('content')));
-        }
+//        if ($emailAddr) {
+//            app('mailer')->to($emailAddr)->queue(new Common($view, $subject, compact('content')));
+//        }
+
+        (new class($type, $emailAddr, $subject, $content) {
+            use Notifiable;
+
+            protected $type;
+            protected $email;
+            protected $title;
+            protected $contents;
+            protected $subjectResolver;
+
+            public function __construct($type, $email, $title, $contents, callable $subjectResolver = null)
+            {
+                $this->type = $type;
+                $this->email = $email;
+                $this->title = $title;
+                $this->contents = $contents;
+                $this->subjectResolver = $subjectResolver;
+            }
+
+            /**
+             * Invoke the instance
+             *
+             * @return void
+             */
+            public function __invoke()
+            {
+                if ($this->subjectResolver != null) {
+                    Notice::setSubjectResolver($this->subjectResolver);
+                }
+
+                $this->notify(new Notice($this->email, $this->title, $this->contents));
+
+                Notice::setSubjectResolverToNull();
+            }
+
+            /**
+             * Get the notification routing information for the given driver.
+             *
+             * @param string $driver driver
+             * @return mixed
+             */
+            public function routeNotificationFor($driver)
+            {
+                return $this->email;
+            }
+        })();
     }
 
     public function attempt($credentials = [])
