@@ -5,6 +5,7 @@ use App\Events\PreResetUserPasswordEvent;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\Rule;
 use Schema;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Xpressengine\Plugin\AbstractPlugin;
@@ -207,16 +208,16 @@ class Plugin extends AbstractPlugin
             'XeUser@validateDisplayName',
             'freezer::validateDisplayName',
             function ($target, $name) {
-
                 $result = $target($name);
-                if($result === true) {
-                    $frozenId = app('freezer::handler')->attempt(['display_name' => $name]);
-                    if($frozenId !== null) {
-                        throw new DisplayNameAlreadyExistsException();
-                    }
+                if ($result === true) {
+                    app('validator')->make(
+                        ['display_name' => $name],
+                        ['display_name' => [
+                            Rule::unique('freezer_user', 'display_name')
+                        ]]
+                    )->validate();
                 }
                 return $result;
-
             }
         );
 
@@ -226,12 +227,15 @@ class Plugin extends AbstractPlugin
             'freezer::validateEmail',
             function ($target, $email) {
                 $result = $target($email);
-                if($result === true) {
-                    $frozenId = app('freezer::handler')->attempt(['address' => $email]);
-                    if($frozenId !== null) {
-                        throw new EmailAlreadyExistsException();
-                    }
+                if ($result === true) {
+                    app('validator')->make(
+                        ['email' => $email],
+                        ['email' => [
+                            Rule::unique('freezer_user', 'email')
+                        ]]
+                    )->validate();
                 }
+
                 return $result;
             }
         );
