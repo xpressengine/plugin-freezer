@@ -1,9 +1,10 @@
 <?php
+
 namespace Xpressengine\Plugins\Freezer\Components\Skins\PasswordProtector;
 
-use Xpressengine\Skin\BladeSkin;
+use Xpressengine\Skin\GenericSkin;
 
-class PasswordProtectorSkin extends BladeSkin
+class PasswordProtectorSkin extends GenericSkin
 {
-    protected $path = 'freezer::components.Skins.PasswordProtector.views';
+    protected static $path = 'freezer::components.Skins.PasswordProtector';
 }
