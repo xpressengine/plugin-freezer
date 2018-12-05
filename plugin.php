@@ -1,4 +1,5 @@
 <?php
+
 namespace Xpressengine\Plugins\Freezer;
 
 use App\Events\PreResetUserPasswordEvent;
@@ -13,7 +14,7 @@ use Xpressengine\Plugins\Freezer\Commands\FreezeCommand;
 use Xpressengine\Plugins\Freezer\Commands\NotifyCommand;
 use Xpressengine\Plugins\Freezer\Commands\UnfreezeCommand;
 use Xpressengine\Plugins\Freezer\Middlewares\Middleware;
-use Xpressengine\Plugins\Freezer\Models\User;
+use Xpressengine\Plugins\Freezer\Models\FrozenUser;
 use Xpressengine\User\Events\UserRetrievedEvent;
 use Xpressengine\User\Exceptions\DisplayNameAlreadyExistsException;
 use Xpressengine\User\Exceptions\EmailAlreadyExistsException;
@@ -23,7 +24,6 @@ use Illuminate\Auth\Events\Login;
 
 class Plugin extends AbstractPlugin
 {
-
     protected $actions = [];
 
     public function register()
@@ -135,9 +135,9 @@ class Plugin extends AbstractPlugin
         // core 비밀번호 찾기 시도시
         \Event::listen(UserRetrievedEvent::class, function ($eventData) {
             if (request()->route()->getName() == 'auth.reset' && $eventData->user === null) {
-                $frozenId = app('freezer::handler')->attempt(['address' => $eventData->credentials['email']]);
+                $frozenUserId = app('freezer::handler')->attempt(['address' => $eventData->credentials['email']]);
 
-                $frozenUser = User::where('id', $frozenId)->first();
+                $frozenUser = FrozenUser::where('id', $frozenUserId)->first();
 
                 $eventData->user = $frozenUser;
             }
