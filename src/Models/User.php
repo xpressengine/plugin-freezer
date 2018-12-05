@@ -26,8 +26,6 @@ use Xpressengine\User\Models\User as OriginUser;
  */
 class User extends OriginUser
 {
-    protected $table = 'freezer_user';
-
     public function freeze_logs()
     {
         return $this->hasMany(Log::class, 'user_id');
