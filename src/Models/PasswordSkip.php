@@ -1,33 +1,36 @@
 <?php
 /**
- * User
+ * PasswordSkip.php
+ *
+ * This file is part of the Xpressengine package.
  *
  * PHP version 5
  *
  * @category    Freezer
- * @package     Xpressengine\Freezer
+ * @package     Xpressengine\Plugins\Freezer
  * @author      XE Developers <developers@xpressengine.com>
- * @copyright   2015 Copyright (C) NAVER Corp. <http://www.navercorp.com>
+ * @copyright   2015 Copyright (C) NAVER <http://www.navercorp.com>
  * @license     http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html LGPL-2.1
- * @link        https://xpressengine.io
+ * @link        http://www.xpressengine.com
  */
 
 namespace Xpressengine\Plugins\Freezer\Models;
+
 use Xpressengine\Database\Eloquent\DynamicModel;
 
 /**
+ * PasswordSkip
+ *
  * @category    Freezer
- * @package     Xpressengine\Freezer
+ * @package     Xpressengine\Plugins\Freezer
  * @author      XE Developers <developers@xpressengine.com>
- * @copyright   2015 Copyright (C) NAVER Corp. <http://www.navercorp.com>
+ * @copyright   2015 Copyright (C) NAVER <http://www.navercorp.com>
  * @license     http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html LGPL-2.1
- * @link        https://xpressengine.io
+ * @link        http://www.xpressengine.com
  */
 class PasswordSkip extends DynamicModel
 {
     protected $table = 'freezer_password_skip';
 
-    protected $dates = [
-        'next_check_at',
-    ];
+    protected $dates = ['next_check_at'];
 }

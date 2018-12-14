@@ -1,4 +1,18 @@
 <?php
+/**
+ * PasswordProtectorController.php
+ *
+ * This file is part of the Xpressengine package.
+ *
+ * PHP version 5
+ *
+ * @category    Freezer
+ * @package     Xpressengine\Plugins\Freezer
+ * @author      XE Developers <developers@xpressengine.com>
+ * @copyright   2015 Copyright (C) NAVER <http://www.navercorp.com>
+ * @license     http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html LGPL-2.1
+ * @link        http://www.xpressengine.com
+ */
 namespace Xpressengine\Plugins\Freezer\Controllers;
 
 use App\Http\Controllers\Controller;
@@ -13,6 +27,16 @@ use Auth;
 use XeDB;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
+/**
+ * PasswordProtectorController
+ *
+ * @category    Freezer
+ * @package     Xpressengine\Plugins\Freezer
+ * @author      XE Developers <developers@xpressengine.com>
+ * @copyright   2015 Copyright (C) NAVER <http://www.navercorp.com>
+ * @license     http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html LGPL-2.1
+ * @link        http://www.xpressengine.com
+ */
 class PasswordProtectorController extends Controller
 {
     use AuthenticatesUsers;
@@ -21,6 +45,12 @@ class PasswordProtectorController extends Controller
         'current_password' => 'required',
         'password' => 'required|confirmed|password',
     ];
+
+    /**
+     * PasswordProtectorController constructor.
+     *
+     * @param Handler $handler freezer handler
+     */
     public function __construct(Handler $handler)
     {
         $skinTarget = 'password_protector/freezer';
@@ -28,10 +58,20 @@ class PasswordProtectorController extends Controller
         XePresenter::setSkinTargetId($skinTarget);
     }
 
+    /**
+     * index
+     *
+     * @param Request $request request
+     * @param Handler $handler freezer handler
+     *
+     * @return mixed|\Xpressengine\Presenter\Presentable
+     */
     public function index(Request $request, Handler $handler)
     {
-        $redirectUrl = $request->get('redirectUrl',
-            $request->session()->pull('url.intended') ?: url()->previous());
+        $redirectUrl = $request->get(
+            'redirectUrl',
+            $request->session()->pull('url.intended') ?: url()->previous()
+        );
 
         if ($redirectUrl !== $request->url()) {
             $request->session()->put('url.intended', $redirectUrl);
@@ -55,6 +95,14 @@ class PasswordProtectorController extends Controller
         ]);
     }
 
+    /**
+     * skip
+     *
+     * @param Request $request request
+     * @param Handler $handler freezer handler
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function skip(Request $request, Handler $handler)
     {
         $user = Auth::user();
@@ -82,6 +130,15 @@ class PasswordProtectorController extends Controller
             ->intended($this->redirectPath());
     }
 
+    /**
+     * reset
+     *
+     * @param Request     $request     request
+     * @param Handler     $handler     freezer handler
+     * @param UserHandler $userHandler user handler
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function reset(Request $request, Handler $handler, UserHandler $userHandler)
     {
         $user = Auth::user();
@@ -89,7 +146,6 @@ class PasswordProtectorController extends Controller
         $this->validate($request, $this->rules);
 
         if ($user->getAuthPassword() !== "") {
-
             $credentials = [
                 'id' => $user->getId(),
                 'password' => $request->get('current_password')

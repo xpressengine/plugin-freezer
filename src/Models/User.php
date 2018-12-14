@@ -26,7 +26,21 @@ use Xpressengine\User\Models\User as OriginUser;
  */
 class User extends OriginUser
 {
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @deprecated since rc.8 instead use freezeLogs()
+     */
     public function freeze_logs()
+    {
+        return $this->hasMany(Log::class, 'user_id');
+    }
+
+    /**
+     * freeze logs
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function freezeLogs()
     {
         return $this->hasMany(Log::class, 'user_id');
     }

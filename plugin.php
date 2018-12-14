@@ -1,4 +1,18 @@
 <?php
+/**
+ * Plugin.php
+ *
+ * This file is part of the Xpressengine package.
+ *
+ * PHP version 5
+ *
+ * @category    Freezer
+ * @package     Xpressengine\Plugins\Freezer
+ * @author      XE Developers <developers@xpressengine.com>
+ * @copyright   2015 Copyright (C) NAVER <http://www.navercorp.com>
+ * @license     http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html LGPL-2.1
+ * @link        http://www.xpressengine.com
+ */
 
 namespace Xpressengine\Plugins\Freezer;
 
@@ -22,10 +36,25 @@ use Xpressengine\User\UserInterface;
 use Route;
 use Illuminate\Auth\Events\Login;
 
+/**
+ * Plugin
+ *
+ * @category    Freezer
+ * @package     Xpressengine\Plugins\Freezer
+ * @author      XE Developers <developers@xpressengine.com>
+ * @copyright   2015 Copyright (C) NAVER <http://www.navercorp.com>
+ * @license     http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html LGPL-2.1
+ * @link        http://www.xpressengine.com
+ */
 class Plugin extends AbstractPlugin
 {
     protected $actions = [];
 
+    /**
+     * register
+     *
+     * @return void
+     */
     public function register()
     {
         app()->singleton(Handler::class, function ($app) {
@@ -86,51 +115,72 @@ class Plugin extends AbstractPlugin
         $schedule = app('Illuminate\Console\Scheduling\Schedule');
         $at = array_get($this->config(), 'scheduled_at');
         if ($at) {
-            $schedule->command('freezer:freeze')->dailyAt(array_get($at, 'freeze'))->appendOutputTo('storage/logs/freezer.log');
-            $schedule->command('freezer:notify')->dailyAt(array_get($at, 'notify'))->appendOutputTo('storage/logs/freezer.log');
+            $schedule->command('freezer:freeze')
+                ->dailyAt(array_get($at, 'freeze'))
+                ->appendOutputTo('storage/logs/freezer.log');
+
+            $schedule->command('freezer:notify')
+                ->dailyAt(array_get($at, 'notify'))
+                ->appendOutputTo('storage/logs/freezer.log');
         }
     }
 
+    /**
+     * register events
+     *
+     * @return void
+     */
     protected function registerEvents()
     {
         // core login 시도시
-        intercept('Auth@attempt', 'freezer::attempt', function($target, array $credentials = [], $remember = false, $login = true){
-            $result = $target($credentials, $remember, $login);
+        intercept(
+            'Auth@attempt',
+            'freezer::attempt',
+            function ($target, array $credentials = [], $remember = false, $login = true) {
+                $result = $target($credentials, $remember, $login);
 
-            if($result === false) {
-                $frozenId = app('freezer::handler')->attempt($credentials);
+                if ($result === false) {
+                    $frozenId = app('freezer::handler')->attempt($credentials);
 
-                $useUnfreezePage = array_get($this->config(), 'use_unfreeze_page');
-                if($frozenId !== null && $useUnfreezePage == true) {
-                    /**
-                     * 로그인 관련 처리 정료
-                     * url.intended 변경해서 페이지 이동 처리
-                     */
-                    $request = app('request');
-                    $request->session()->flash('unfreeze_id', $frozenId);
-                    $request->session()->put('url.intended', route('freezer::unfreeze.index'));
-                    return true;
-                }
-
-                if($frozenId !== null) {
-                    \DB::beginTransaction();
-                    try {
-                        app('freezer::handler')->unfreeze($frozenId);
-                    } catch (\Exception $e) {
-                        \DB::rollBack();
-                        throw $e;
+                    $useUnfreezePage = array_get($this->config(), 'use_unfreeze_page');
+                    if ($frozenId !== null && $useUnfreezePage == true) {
+                        /**
+                         * 로그인 관련 처리 정료
+                         * url.intended 변경해서 페이지 이동 처리
+                         */
+                        $request = app('request');
+                        $request->session()->flash('unfreeze_id', $frozenId);
+                        $request->session()->put('url.intended', route('freezer::unfreeze.index'));
+                        return true;
                     }
-                    \DB::commit();
 
-                    $this->addAction('unfreeze_alert', function($request, $response) {
-                        /** @var RedirectResponse $response */
-                        return $response->with('alert', ['type' => 'warning', 'message' => '휴면 상태의 계정을 복구후 로그인되었습니다.']);
-                    });
-                    return $target($credentials, $remember, $login);
+                    if ($frozenId !== null) {
+                        \DB::beginTransaction();
+                        try {
+                            app('freezer::handler')->unfreeze($frozenId);
+                        } catch (\Exception $e) {
+                            \DB::rollBack();
+                            throw $e;
+                        }
+                        \DB::commit();
+
+                        $this->addAction(
+                            'unfreeze_alert',
+                            function ($request, $response) {
+                                /** @var RedirectResponse $response */
+                                return $response->with(
+                                    'alert',
+                                    ['type' => 'warning', 'message' => '휴면 상태의 계정을 복구후 로그인되었습니다.']
+                                );
+                            }
+                        );
+
+                        return $target($credentials, $remember, $login);
+                    }
                 }
+                return $result;
             }
-            return $result;
-        });
+        );
 
         // core 비밀번호 찾기 시도시
         \Event::listen(UserRetrievedEvent::class, function ($eventData) {
@@ -160,12 +210,11 @@ class Plugin extends AbstractPlugin
         });
 
         // social_login - login 시도시
-        intercept('SocialLoginAuth@login', 'freezer::social_login', function($target, $userInfo){
-
+        intercept('SocialLoginAuth@login', 'freezer::social_login', function ($target, $userInfo) {
             $frozenId = app('freezer::handler')->attempt($userInfo);
 
             $useUnfreezePage = array_get($this->config(), 'use_unfreeze_page');
-            if($frozenId !== null && $useUnfreezePage == true) {
+            if ($frozenId !== null && $useUnfreezePage == true) {
                 /**
                  * 로그인 관련 처리 정료
                  * url.intended 변경해서 페이지 이동 처리
@@ -176,7 +225,7 @@ class Plugin extends AbstractPlugin
                 return true;
             }
 
-            if($frozenId !== null) {
+            if ($frozenId !== null) {
                 \DB::beginTransaction();
                 try {
                     app('freezer::handler')->unfreeze($frozenId);
@@ -186,19 +235,22 @@ class Plugin extends AbstractPlugin
                 }
                 \DB::commit();
 
-                $this->addAction('unfreeze_alert', function($request, $response) {
-                    /** @var RedirectResponse $response */
-                    return $response->with('alert', ['type' => 'warning', 'message' => '휴면 상태의 계정을 복구후 로그인되었습니다.']);
-                });
+                $this->addAction(
+                    'unfreeze_alert',
+                    function ($request, $response) {
+                        /** @var RedirectResponse $response */
+                        return $response->with('alert', ['type' => 'warning', 'message' => '휴면 상태의 계정을 복구후 로그인되었습니다.']);
+                    }
+                );
             }
             return $target($userInfo);
         });
 
         // social_login - connect 시도시
-        intercept('SocialLoginAuth@connect', 'freezer::social_connect', function($target, $userInfo){
+        intercept('SocialLoginAuth@connect', 'freezer::social_connect', function ($target, $userInfo) {
             $frozenId = app('freezer::handler')->attempt($userInfo);
-            if($frozenId !== null) {
-                throw new HttpException('400','이미 다른 회원에 의해 등록된 계정입니다.');
+            if ($frozenId !== null) {
+                throw new HttpException('400', '이미 다른 회원에 의해 등록된 계정입니다.');
             }
             return $target($userInfo);
         });
@@ -248,8 +300,8 @@ class Plugin extends AbstractPlugin
 
                 $frozenId = app('freezer::handler')->attempt($data);
 
-                if($frozenId !== null) {
-                    throw new HttpException('400','이미 다른 회원에 의해 등록된 이메일입니다.');
+                if ($frozenId !== null) {
+                    throw new HttpException('400', '이미 다른 회원에 의해 등록된 이메일입니다.');
                 }
                 $result = $target($user, $data, $confirmed);
                 return $result;
@@ -262,8 +314,10 @@ class Plugin extends AbstractPlugin
             if (app(Handler::class)->isPasswordProtectTarget($eventData->user)) {
                 // 다음 이동 페이지 설정을 조작해서 비밀번호 변경 페이지로 이동
                 $request = app('request');
-                $redirectUrl = $request->get('redirectUrl',
-                    $request->session()->pull('url.intended') ?: url()->previous());
+                $redirectUrl = $request->get(
+                    'redirectUrl',
+                    $request->session()->pull('url.intended') ?: url()->previous()
+                );
 
                 $params = [
                     'redirectUrl' => $redirectUrl
@@ -273,15 +327,31 @@ class Plugin extends AbstractPlugin
         });
     }
 
+    /**
+     * register middleware
+     *
+     * @return void
+     */
     protected function registerMiddleware()
     {
         app(\Illuminate\Contracts\Http\Kernel::class)->pushMiddleware(Middleware::class);
     }
 
-    public function config() {
+    /**
+     * get config
+     *
+     * @return \Illuminate\Config\Repository|mixed
+     */
+    public function config()
+    {
         return config('services.freezer');
     }
 
+    /**
+     * store route
+     *
+     * @return void
+     */
     protected function route()
     {
         // implement code
@@ -311,8 +381,8 @@ class Plugin extends AbstractPlugin
     /**
      * addAction
      *
-     * @param stirng  $alias
-     * @param Closure $action
+     * @param string   $alias  alias
+     * @param \Closure $action action
      *
      * @return void
      */
@@ -354,7 +424,7 @@ class Plugin extends AbstractPlugin
      */
     public function install()
     {
-        if(!Schema::hasTable('freezer_user')) {
+        if (!Schema::hasTable('freezer_user')) {
             Schema::create('freezer_user', function (Blueprint $table) {
                 $table->engine = "InnoDB";
 
@@ -376,7 +446,7 @@ class Plugin extends AbstractPlugin
             });
         }
 
-        if(!Schema::hasTable('freezer_user_group_user')) {
+        if (!Schema::hasTable('freezer_user_group_user')) {
             Schema::create('freezer_user_group_user', function (Blueprint $table) {
                 $table->engine = "InnoDB";
 
@@ -385,13 +455,13 @@ class Plugin extends AbstractPlugin
                 $table->string('user_id', 36);
                 $table->timestamp('created_at')->nullable();
 
-                $table->unique(['group_id','user_id']);
+                $table->unique(['group_id', 'user_id']);
                 $table->index('group_id');
                 $table->index('user_id');
             });
         }
 
-        if(!Schema::hasTable('freezer_user_account')) {
+        if (!Schema::hasTable('freezer_user_account')) {
             Schema::create('freezer_user_account', function (Blueprint $table) {
                 $table->engine = "InnoDB";
 
@@ -406,11 +476,11 @@ class Plugin extends AbstractPlugin
                 $table->timestamp('updated_at')->nullable();
 
                 $table->primary('id');
-                $table->unique(['provider','account_id']);
+                $table->unique(['provider', 'account_id']);
             });
         }
 
-        if(!Schema::hasTable('freezer_user_email')) {
+        if (!Schema::hasTable('freezer_user_email')) {
             Schema::create('freezer_user_email', function (Blueprint $table) {
                 $table->engine = "InnoDB";
 
@@ -425,7 +495,7 @@ class Plugin extends AbstractPlugin
             });
         }
 
-        if(!Schema::hasTable('freezer_log')) {
+        if (!Schema::hasTable('freezer_log')) {
             Schema::create('freezer_log', function (Blueprint $table) {
                 $table->engine = "InnoDB";
 
@@ -440,7 +510,7 @@ class Plugin extends AbstractPlugin
             });
         }
 
-        if(!Schema::hasTable('freezer_password_skip')) {
+        if (!Schema::hasTable('freezer_password_skip')) {
             Schema::create('freezer_password_skip', function (Blueprint $table) {
                 $table->engine = "InnoDB";
 

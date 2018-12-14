@@ -1,14 +1,16 @@
 <?php
 /**
- *  This file is part of the Xpressengine package.
+ * Handler.php
+ *
+ * This file is part of the Xpressengine package.
  *
  * PHP version 5
  *
- * @category
- * @package     Xpressengine\
- * @author      XE Team (developers) <developers@xpressengine.com>
+ * @category    Freezer
+ * @package     Xpressengine\Plugins\Freezer
+ * @author      XE Developers <developers@xpressengine.com>
  * @copyright   2015 Copyright (C) NAVER <http://www.navercorp.com>
- * @license     http://www.gnu.org/licenses/lgpl-3.0-standalone.html LGPL
+ * @license     http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html LGPL-2.1
  * @link        http://www.xpressengine.com
  */
 
@@ -29,11 +31,13 @@ use Xpressengine\Support\Notifications\Notice;
 use Illuminate\Notifications\Notifiable;
 
 /**
- * @category
+ * Handler
+ *
+ * @category    Freezer
  * @package     Xpressengine\Plugins\Freezer
- * @author      XE Team (developers) <developers@xpressengine.com>
+ * @author      XE Developers <developers@xpressengine.com>
  * @copyright   2015 Copyright (C) NAVER <http://www.navercorp.com>
- * @license     http://www.gnu.org/licenses/lgpl-3.0-standalone.html LGPL
+ * @license     http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html LGPL-2.1
  * @link        http://www.xpressengine.com
  */
 class Handler
@@ -53,7 +57,8 @@ class Handler
     /**
      * Handler constructor.
      *
-     * @param Plugin $plugin
+     * @param Plugin      $plugin  plugin
+     * @param UserHandler $handler freezer handler
      */
     public function __construct(Plugin $plugin, UserHandler $handler)
     {
@@ -61,12 +66,28 @@ class Handler
         $this->handler = $handler;
     }
 
+    /**
+     * config
+     *
+     * @param null|string $field   field
+     * @param null|mixed  $default default
+     *
+     * @return mixed
+     */
     public function config($field = null, $default = null)
     {
         $config = $this->plugin->config();
+
         return array_get($config, $field, $default);
     }
 
+    /**
+     * choose
+     *
+     * @param string $action action
+     *
+     * @return Collection
+     */
     public function choose($action = 'freeze')
     {
         $users = new Collection();
@@ -96,9 +117,11 @@ class Handler
     }
 
     /**
+     * notify
+     *
      * 휴면처리 대상이 되는 회원에게 예고 이메일 전송하는 잡을 생성하여 Queue에 추가한다.
      *
-     * @param null $users
+     * @param null $users users
      *
      * @return int
      */
@@ -129,9 +152,11 @@ class Handler
     }
 
     /**
+     * freeze
+     *
      * 휴면처리 대상이 되는 모든 회원을 조회후 휴면처리 잡(FreezeJob)을 생성하여 Queue에 추가한다.
      *
-     * @param $users
+     * @param null $users users
      *
      * @return int
      */
@@ -160,6 +185,14 @@ class Handler
         return $users->count();
     }
 
+    /**
+     * freeze user
+     *
+     * @param array|string $user_ids user id or user ids
+     *
+     * @return void
+     * @throws \Exception
+     */
     public function freezeUser($user_ids)
     {
         if (is_string($user_ids)) {
@@ -180,6 +213,14 @@ class Handler
         }
     }
 
+    /**
+     * delete user
+     *
+     * @param array|string $user_ids user id or user ids
+     *
+     * @return void
+     * @throws \Exception
+     */
     public function deleteUser($user_ids)
     {
         if (is_string($user_ids)) {
@@ -200,6 +241,14 @@ class Handler
         }
     }
 
+    /**
+     * notify user
+     *
+     * @param array|string $user_ids user id or user ids
+     *
+     * @return void
+     * @throws \Exception
+     */
     public function notifyUser($user_ids)
     {
         if (is_string($user_ids)) {
@@ -219,6 +268,14 @@ class Handler
         }
     }
 
+    /**
+     * unfreeze
+     *
+     * @param string $user_id user id
+     *
+     * @return void
+     * @throws \Exception
+     */
     public function unfreeze($user_id)
     {
         try {
@@ -232,6 +289,14 @@ class Handler
         $this->logging($user->id, 'unfreeze');
     }
 
+    /**
+     * move data
+     *
+     * @param string $type    type
+     * @param string $user_id user id
+     *
+     * @return void
+     */
     protected function moveData($type, $user_id)
     {
         if ($type === 'freeze') {
@@ -273,6 +338,16 @@ class Handler
         }
     }
 
+    /**
+     * logging
+     *
+     * @param string $user_id user id
+     * @param string $action  action
+     * @param array  $content content
+     * @param string $result  result
+     *
+     * @return void
+     */
     protected function logging($user_id, $action, $content = [], $result = 'successd')
     {
         // type = freeze, delete, unfreeze, notify
@@ -284,6 +359,14 @@ class Handler
         $log->save();
     }
 
+    /**
+     * send email
+     *
+     * @param \Xpressengine\User\Models\User $user user
+     * @param string                         $type type
+     *
+     * @return void
+     */
     protected function sendEmail($user, $type)
     {
         $subject = $this->config("email.$type.subject");
@@ -308,6 +391,15 @@ class Handler
             protected $contents;
             protected $subjectResolver;
 
+            /**
+             *  constructor.
+             *
+             * @param string        $type            type
+             * @param string        $email           email
+             * @param string        $title           title
+             * @param string        $contents        contents
+             * @param callable|null $subjectResolver resolver
+             */
             public function __construct($type, $email, $title, $contents, callable $subjectResolver = null)
             {
                 $this->type = $type;
@@ -346,6 +438,13 @@ class Handler
         })();
     }
 
+    /**
+     * attempt
+     *
+     * @param array $credentials credentials
+     *
+     * @return mixed|null
+     */
     public function attempt($credentials = [])
     {
 
@@ -390,6 +489,13 @@ class Handler
         return null;
     }
 
+    /**
+     * is password protect target
+     *
+     * @param User $user user
+     *
+     * @return bool
+     */
     public function isPasswordProtectTarget($user)
     {
         $config = $this->config('password_protector');
@@ -413,6 +519,15 @@ class Handler
         return false;
     }
 
+    /**
+     * password protect skip
+     *
+     * @param string $userId user id
+     * @param string $email  string
+     * @param array  $data   data
+     *
+     * @return void
+     */
     public function passwordProtectSkip($userId, $email, array $data = [])
     {
         $nextCheckTimer = $this->config('password_protector.next_check_timer');
@@ -424,10 +539,19 @@ class Handler
             $skip->email = $email;
             $skip->action = array_get($data, 'action', 'default');
         }
-        $skip->next_check_at = Carbon::now()->addDays($nextCheckTimer);;
+
+        $skip->next_check_at = Carbon::now()->addDays($nextCheckTimer);
+
         $skip->save();
     }
 
+    /**
+     * drop password protect skip
+     *
+     * @param string $userId user id
+     *
+     * @return void
+     */
     public function dropPasswordProtectSkip($userId)
     {
         PasswordSkip::where('user_id', $userId)->delete();

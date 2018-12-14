@@ -1,4 +1,19 @@
 <?php
+/**
+ * UnfreezeController.php
+ *
+ * This file is part of the Xpressengine package.
+ *
+ * PHP version 5
+ *
+ * @category    Freezer
+ * @package     Xpressengine\Plugins\Freezer
+ * @author      XE Developers <developers@xpressengine.com>
+ * @copyright   2015 Copyright (C) NAVER <http://www.navercorp.com>
+ * @license     http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html LGPL-2.1
+ * @link        http://www.xpressengine.com
+ */
+
 namespace Xpressengine\Plugins\Freezer\Controllers;
 
 use App\Http\Controllers\Controller;
@@ -8,8 +23,23 @@ use XeSkin;
 use Xpressengine\Plugins\Freezer\Handler;
 use Xpressengine\Support\Exceptions\XpressengineException;
 
+/**
+ * UnfreezeController
+ *
+ * @category    Freezer
+ * @package     Xpressengine\Plugins\Freezer
+ * @author      XE Developers <developers@xpressengine.com>
+ * @copyright   2015 Copyright (C) NAVER <http://www.navercorp.com>
+ * @license     http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html LGPL-2.1
+ * @link        http://www.xpressengine.com
+ */
 class UnfreezeController extends Controller
 {
+    /**
+     * UnfreezeController constructor.
+     *
+     * @param Handler $handler freezer handler
+     */
     public function __construct(Handler $handler)
     {
         $skinTarget = 'unfreeze/freezer';
@@ -17,6 +47,14 @@ class UnfreezeController extends Controller
         XePresenter::setSkinTargetId($skinTarget);
     }
 
+    /**
+     * index
+     *
+     * @param Request $request request
+     * @param Handler $handler freezer handler
+     *
+     * @return mixed|\Xpressengine\Presenter\Presentable
+     */
     public function index(Request $request, Handler $handler)
     {
         $frozenId = $request->session()->pull('unfreeze_id');
@@ -28,6 +66,14 @@ class UnfreezeController extends Controller
         return XePresenter::make('index', []);
     }
 
+    /**
+     * active
+     *
+     * @param Request $request request
+     * @param Handler $handler freezer handler
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function activate(Request $request, Handler $handler)
     {
         $frozenId = $request->session()->pull('unfreeze_id');
