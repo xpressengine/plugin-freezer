@@ -100,14 +100,14 @@ class Handler
             $eventDate = Carbon::now()->subDays($duration);
             $candidates = User::where('login_at', '<', $eventDate)->with(
                 [
-                    'freeze_logs' => function ($q) {
+                    'freezeLogs' => function ($q) {
                         return $q->orderBy('created_at', 'desc');
                     }
                 ]
             )->get();
 
             foreach ($candidates as $user) {
-                $latestLog = $user->freeze_logs->first();
+                $latestLog = $user->freezeLogs->first();
                 if (data_get($latestLog, 'action') !== 'notify') {
                     $users->add($user);
                 }
