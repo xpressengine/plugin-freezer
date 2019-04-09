@@ -548,6 +548,11 @@ class Plugin extends AbstractPlugin
      */
     public function update()
     {
+        if (Schema::hasColumn('freezer_user_account', 'data') == true) {
+            Schema::table('freezer_user_account', function (Blueprint $table) {
+                $table->dropColumn('data');
+            });
+        }
     }
 
     /**
@@ -558,6 +563,10 @@ class Plugin extends AbstractPlugin
      */
     public function checkUpdated()
     {
+        if (Schema::hasColumn('freezer_user_account', 'data') == true) {
+            return false;
+        }
+
         return true;
     }
 }
