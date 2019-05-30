@@ -112,6 +112,8 @@ class Plugin extends AbstractPlugin
 
         $this->route();
 
+        $this->registerSettingMenu();
+
         $schedule = app('Illuminate\Console\Scheduling\Schedule');
         $at = array_get($this->config(), 'scheduled_at');
         if ($at) {
@@ -376,6 +378,24 @@ class Plugin extends AbstractPlugin
             Route::get('/', ['as' => 'index', 'uses' => 'UnfreezeController@index']);
             Route::post('/activate', ['as' => 'activate', 'uses' => 'UnfreezeController@activate']);
         });
+
+        Route::settings(Plugin::getId(), function () {
+            Route::get('/log', ['as' => 'freezer::setting.log', 'uses' => 'LogController@index', 'settings_menu' => 'user.freezer_log']);
+        }, ['namespace' => 'Xpressengine\\Plugins\\Freezer\\Controllers\\Settings']);
+    }
+
+    protected function registerSettingMenu()
+    {
+        app('xe.register')->push(
+            'settings/menu',
+            'user.freezer_log',
+            [
+                'title' => 'freezer::freezerWorkLog',
+                'description' => '',
+                'display' => true,
+                'ordering' => 310
+            ]
+        );
     }
 
     /**

@@ -49,4 +49,36 @@ return [
         'ko' => '휴면계정이 활성화 되었습니다.',
         'en' => 'Account has been activated.'
     ],
+    'freezerWorkLog' => [
+        'ko' => '휴면 계정 작업 내역',
+        'en' => 'Freezer work log'
+    ],
+    'inactiveUser' => [
+        'ko' => '휴면 계정',
+        'en' => 'Inactive account'
+    ],
+    'notify' => [
+        'ko' => '알림',
+        'en' => 'Notify'
+    ],
+    'searchPeriod' => [
+        'ko' => '검색 기간',
+        'en' => 'Search period'
+    ],
+    'workHistory' => [
+        'ko' => '작업 내역',
+        'en' => 'Work history'
+    ],
+    'workTime' => [
+        'ko' => '작업 시간',
+        'en' => 'Work time'
+    ],
+    'workType' => [
+        'ko' => '작업 종류',
+        'en' => 'Work type'
+    ],
+    'workResult' => [
+        'ko' => '작업 결과',
+        'en' => 'Work result'
+    ]
 ];
