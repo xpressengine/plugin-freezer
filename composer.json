@@ -1,6 +1,6 @@
 {
   "name": "xpressengine-plugin/freezer",
-  "description": "This Package is Xpressengine Plugin - 휴면계정 관리.",
+  "description": "장기간동안 로그인을 하지 않은 사용자 계정을 별도 분리하는 기능을 제공합니다..",
   "keywords": [
     "xpressengine",
     "plugin",
@@ -16,7 +16,7 @@
     {
       "name": "XE Developers",
       "email": "developers@xpressengine.com",
-      "homepage": "http://xpressengine.io",
+      "homepage": "https://store.xehub.io/plugins/freezer",
       "role": "Developer"
     }
   ],
