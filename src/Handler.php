@@ -464,10 +464,13 @@ class Handler
      */
     public function attempt($credentials = [])
     {
-
         if (array_has($credentials, 'password')) { // 이메일/비번 로그인
             $email = array_get($credentials, 'email');
-            $userInfo = DB::table('freezer_user')->where('email', $email)->first();
+            $targetColumn = 'email';
+            if (!str_contains($email, '@')) {
+                $targetColumn = 'login_id';
+            }
+            $userInfo = DB::table('freezer_user')->where($targetColumn, $email)->first();
             if ($userInfo !== null) {
                 $plain = $credentials['password'];
                 if (app('hash')->check($plain, $userInfo->password)) {
