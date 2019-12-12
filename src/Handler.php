@@ -310,6 +310,16 @@ class Handler
         // copy user table
         $table = ['origin' => 'user', 'target' => 'freezer_user'];
         $user = DB::table($table[$origin])->find($user_id);
+
+        if ($type !== 'freeze') {
+            $loginId = $user->login_id;
+            if ($user->login_id === null) {
+                $loginId = strtok($user->email, '@');
+            }
+
+            $user->login_id = $this->generateLoginId($table[$target], $loginId);
+        }
+
         DB::table($table[$origin])->delete($user_id);
         DB::table($table[$target])->insert((array) $user);
 
@@ -335,6 +345,13 @@ class Handler
         DB::table($table[$origin])->where('user_id', $user_id)->delete();
         foreach ($group_users as $group) {
             DB::table($table[$target])->insert((array) $group);
+        }
+
+        $table = ['origin' => 'user_term_agrees', 'target' => 'freezer_user_term_agrees'];
+        $userAgreeData = DB::table($table[$origin])->where('user_id', $user_id)->get();
+        DB::table($table[$origin])->where('user_id', $user_id)->delete();
+        foreach ($userAgreeData as $data) {
+            DB::table($table[$target])->insert((array) $data);
         }
     }
 
@@ -502,7 +519,7 @@ class Handler
         if ($config['use'] == false) {
             return false;
         }
-        
+
         if (!$user->password_updated_at) {
             return false;
         }
@@ -555,5 +572,20 @@ class Handler
     public function dropPasswordProtectSkip($userId)
     {
         PasswordSkip::where('user_id', $userId)->delete();
+    }
+
+    /**
+     * @param string $targetTable target table
+     * @param string $loginId     login_id
+     *
+     * @return string
+     */
+    private function generateLoginId($targetTable, $loginId)
+    {
+        if (DB::table($targetTable)->where('login_id', $loginId)->exists() === false) {
+            return $loginId;
+        } else {
+            return $loginId . 1;
+        }
     }
 }

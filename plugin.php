@@ -275,6 +275,24 @@ class Plugin extends AbstractPlugin
             }
         );
 
+        // login_id 휴면계정에 있는 계정에 login_id까지 존재하는지 검사하도록 추가
+        intercept(
+            'XeUser@validateLoginId',
+            'freezer@validateLoginId',
+            function ($target, $loginId, $user = null) {
+                $result = $target($loginId, $user);
+
+                if ($result === true) {
+                    app('validator')->make(
+                        ['login_id' => $loginId],
+                        ['login_id' => Rule::unique('freezer_user', 'login_id')]
+                    )->validate();
+                }
+
+                return $result;
+            }
+        );
+
         // email, 휴면상태인 계정에 존재하는지 검사
         intercept(
             'XeUser@validateEmail',
@@ -451,6 +469,7 @@ class Plugin extends AbstractPlugin
                 $table->string('id', 36);
                 $table->string('display_name', 255)->unique();
                 $table->string('email', 255)->nullable();
+                $table->string('login_id')->nullable();
                 $table->string('password', 255)->nullable();
                 $table->string('rating', 15)->default('user');
                 $table->char('status', 20);
@@ -543,6 +562,10 @@ class Plugin extends AbstractPlugin
                 $table->timestamp('updated_at')->nullable();
             });
         }
+
+        if ($this->checkExistUserTermAgreeTable() === false) {
+            $this->createUserTermAgreeTable();
+        }
     }
 
     /**
@@ -558,7 +581,8 @@ class Plugin extends AbstractPlugin
             && Schema::hasTable('freezer_user_account')
             && Schema::hasTable('freezer_user_email')
             && Schema::hasTable('freezer_log')
-            && Schema::hasTable('freezer_password_skip');
+            && Schema::hasTable('freezer_password_skip')
+            && $this->checkExistUserTermAgreeTable();
     }
 
     /**
@@ -572,6 +596,14 @@ class Plugin extends AbstractPlugin
             Schema::table('freezer_user_account', function (Blueprint $table) {
                 $table->dropColumn('data');
             });
+        }
+
+        if ($this->checkExistUserLoginIdColumn() === false) {
+            $this->createUserLoginIdColumn();
+        }
+
+        if ($this->checkExistUserTermAgreeTable() === false) {
+            $this->createUserTermAgreeTable();
         }
     }
 
@@ -587,6 +619,69 @@ class Plugin extends AbstractPlugin
             return false;
         }
 
+        if ($this->checkExistUserLoginIdColumn() === false) {
+            return false;
+        }
+
+        if ($this->checkExistUserTermAgreeTable() === false) {
+            return false;
+        }
+
         return true;
+    }
+
+    /**
+    **
+    * User 테이블에 login_id 컬럼이 존재 여부 확인
+    *
+    * @return bool
+    */
+    private function checkExistUserLoginIdColumn()
+    {
+        return Schema::hasColumn('freezer_user', 'login_id');
+    }
+
+    /**
+     * User 테이블에 login_id 컬럼 생성
+     *
+     * @return void
+     */
+    private function createUserLoginIdColumn()
+    {
+        Schema::table('freezer_user', function (Blueprint $table) {
+            $table->string('login_id')->nullable()->after('email');
+        });
+    }
+
+    /**
+     * Check exist user term agree table
+     *
+     * @return bool
+     */
+    private function checkExistUserTermAgreeTable()
+    {
+        return Schema::hasTable('freezer_user_term_agrees');
+    }
+
+    /**
+     * Create user term agree table
+     *
+     * @return void
+     */
+    private function createUserTermAgreeTable()
+    {
+        Schema::create('freezer_user_term_agrees', function (Blueprint $table) {
+            $table->string('id', 36);
+
+            $table->string('user_id', 36);
+            $table->string('term_id', 36);
+
+            $table->softDeletes();
+            $table->timestamps();
+
+            $table->unique(['user_id', 'term_id']);
+            $table->index('user_id');
+            $table->index('term_id');
+        });
     }
 }
