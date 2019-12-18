@@ -94,11 +94,24 @@ class Handler
         if ($action === 'freeze') {
             $duration = $this->config('timer');
             $eventDate = Carbon::now()->subDays($duration);
-            $users = $this->handler->where('login_at', '<', $eventDate)->get();
+
+            $users = $this->handler->where([
+                ['login_at', '<>', null],
+                ['login_at', '<', $eventDate]
+            ])->orWhere([
+                ['login_at', null],
+                ['created_at', '<', $eventDate]
+            ])->get();
         } elseif ($action === 'notify') {
             $duration = $this->config('notify_timer');
             $eventDate = Carbon::now()->subDays($duration);
-            $candidates = User::where('login_at', '<', $eventDate)->with(
+            $candidates = User::where([
+                ['login_at', '<>', null],
+                ['login_at', '<', $eventDate]
+            ])->orWhere([
+                ['login_at', null],
+                ['created_at', '<', $eventDate]
+            ])->with(
                 [
                     'freezeLogs' => function ($q) {
                         return $q->orderBy('created_at', 'desc');
